@@ -1,8 +1,18 @@
+console.log("Saral AI running");
 function enableFocusMode() {
   // Remove ads/popups (basic heuristic)
-  const elements = document.querySelectorAll("aside, iframe, .ad, .popup");
+  const elements = document.querySelectorAll(`
+  aside,
+  iframe,
+  [id*="ad"],
+  [class*="ad"],
+  [class*="sponsor"],
+  [id*="promo"]
+`);
 
-  elements.forEach(el => el.remove());
+  elements.forEach((el) => {
+    el.style.display = "none";
+  });
 
   // Increase readability
   document.body.style.lineHeight = "1.8";
