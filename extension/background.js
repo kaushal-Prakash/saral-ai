@@ -1,4 +1,4 @@
-const API_KEY = 'YOUR_API_KEY_HERE';
+const API_KEY = 'AIzaSyCCnmRW3jp4WlsjmZwgqp325U_M5d2bV7E';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
