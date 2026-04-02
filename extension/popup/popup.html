@@ -1,29 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="/popup/popup.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { width: 300px; padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h2 { margin: 0; color: #4285f4; }
+        .cls-card { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; border: 1px solid #ddd; }
+        .cls-score { font-size: 32px; font-weight: bold; margin: 10px 0; }
+        .cls-status { font-size: 14px; font-weight: bold; }
+        .controls button { width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        #focusBtn { background: #34a853; color: white; }
+        #simplifyBtn { background: #4285f4; color: white; }
+        .controls button:hover { opacity: 0.9; }
+    </style>
 </head>
 <body>
+    <div class="header">
+        <h2>🧠 Saral AI</h2>
+        <small>Cognitive Load Assistant</small>
+    </div>
 
-<div class="container">
-  <header>
-    <h1>✨ Saral AI</h1>
-    <p>Make web simple & distraction-free</p>
-  </header>
+    <div class="cls-card">
+        <div>Cognitive Load Score (CLS)</div>
+        <div class="cls-score" id="clsValue">--</div>
+        <div class="cls-status" id="clsStatus">Analyzing page...</div>
+    </div>
 
-  <div class="toggle-container">
-    <span class="toggle-label" id="toggleLabel">Focus Mode</span>
-    <label class="switch">
-      <input type="checkbox" id="focusToggle">
-      <span class="slider round"></span>
-    </label>
-  </div>
+    <div class="controls">
+        <button id="focusBtn">Toggle Focus Mode</button>
+        <button id="simplifyBtn">Simplify Text with AI</button>
+    </div>
 
-  <footer>Built for Big Code 💡</footer>
-</div>
-
-<script src="/popup/popup.js"></script>
+    <script src="/popup/popup.js"></script>
 </body>
 </html>

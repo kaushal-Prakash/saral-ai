@@ -1,32 +1,39 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const toggleBtn = document.getElementById("focusToggle");
+// Request the CLS score when the popup opens
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.sendMessage(tabs[0].id, { action: 'getCLS' }, (response) => {
+        if (response && response.score) {
+            updateCLSDisplay(response.score);
+        }
+    });
+});
 
-  // Load saved state
-  chrome.storage.local.get(["focusMode"], (result) => {
-    toggleBtn.checked = !!result.focusMode;
-  });
-
-  // Handle toggle changes
-  toggleBtn.addEventListener("change", async (e) => {
-    const isEnabled = e.target.checked;
+function updateCLSDisplay(score) {
+    document.getElementById('clsValue').innerText = score;
+    const statusEl = document.getElementById('clsStatus');
     
-    // Save state
-    await chrome.storage.local.set({ focusMode: isEnabled });
-
-    // Send message to active tab
-    try {
-      const tabs = await chrome.tabs.query({
-        active: true,
-        currentWindow: true
-      });
-
-      if (tabs.length > 0 && tabs[0].id) {
-        chrome.tabs.sendMessage(tabs[0].id, { 
-          action: isEnabled ? "focus" : "disable_focus" 
-        }).catch(err => console.log("Content script not ready or error:", err));
-      }
-    } catch (err) {
-      console.log("Error querying tabs:", err);
+    if (score > 75) {
+        statusEl.innerText = "High Overload Detected 🔴";
+        statusEl.style.color = "#ea4335";
+    } else if (score > 40) {
+        statusEl.innerText = "Moderate Clutter 🟡";
+        statusEl.style.color = "#fbbc04";
+    } else {
+        statusEl.innerText = "Clean & Accessible 🟢";
+        statusEl.style.color = "#34a853";
     }
-  });
+}
+
+document.getElementById('focusBtn').addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleFocusMode' });
+    });
+});
+
+document.getElementById('simplifyBtn').addEventListener('click', () => {
+    document.getElementById('simplifyBtn').innerText = "Processing...";
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'simplifyText' }, () => {
+            document.getElementById('simplifyBtn').innerText = "Simplify Text with AI";
+        });
+    });
 });
