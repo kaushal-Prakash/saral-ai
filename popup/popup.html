@@ -3,14 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="/popup/popup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div class="container">
-  <h1>✨ Saral AI</h1>
-  <p>Make web simple & distraction-free</p>
+  <header>
+    <h1>✨ Saral AI</h1>
+    <p>Make web simple & distraction-free</p>
+  </header>
 
-  <button id="focusBtn">🚀 Enable Focus Mode</button>
+  <div class="toggle-container">
+    <span class="toggle-label" id="toggleLabel">Focus Mode</span>
+    <label class="switch">
+      <input type="checkbox" id="focusToggle">
+      <span class="slider round"></span>
+    </label>
+  </div>
 
   <footer>Built for Big Code 💡</footer>
 </div>

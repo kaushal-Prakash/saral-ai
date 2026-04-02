@@ -91,6 +91,16 @@ function showCLS(CLS) {
 }
 
 // ===== LISTENER =====
+chrome.storage.local.get(['focusMode'], (result) => {
+  if (result.focusMode) {
+    enableFocusMode();
+  }
+});
+
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.action === "focus") enableFocusMode();
+  if (msg.action === "focus") {
+    enableFocusMode();
+  } else if (msg.action === "disable_focus") {
+    window.location.reload();
+  }
 });
