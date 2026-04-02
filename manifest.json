@@ -2,15 +2,15 @@
   "manifest_version": 3,
   "name": "Saral AI",
   "version": "1.0",
-  "description": "Making the web simple and distraction-free.",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "description": "Simplify the web for every mind",
+  "permissions": ["activeTab", "scripting"],
   "action": {
     "default_popup": "popup.html"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["engine.js", "content.js"]
+      "js": ["core.js"]
     }
   ]
 }
