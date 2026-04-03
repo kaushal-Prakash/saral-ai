@@ -21,25 +21,26 @@ class AdaptiveBehaviorEngine {
     const currentY = overlay.scrollTop;
     const now = Date.now();
     const timeDelta = now - this.lastScrollTime;
-    const scrollDelta = currentY - this.lastScrollY;
-
-    if (timeDelta > 0) {
+    
+    // Evaluate scrolling behavior only every 500ms to prevent distracting rapid changes
+    if (timeDelta >= 500) {
+      const scrollDelta = currentY - this.lastScrollY;
       const velocity = scrollDelta / timeDelta;
       
       if (velocity > 0.5) {
-        // Scrolling fast downwards -> decrease stress
+        // Fast reading / skimming -> decrease stress
         this.updateCSI(-5);
-      } else if (velocity < 0 && scrollDelta < -100) {
-        // Scrolling upwards significantly -> potential re-reading / confusion -> increase stress
-        this.updateCSI(15);
+      } else if (velocity < -0.2) {
+        // Scrolling upwards (re-reading) -> increase stress
+        this.updateCSI(10);
       } else if (velocity > 0 && velocity < 0.1) {
-        // Extremely slow crawl downwards -> potential struggle
-        this.updateCSI(5);
+        // Very slow read -> slight struggle -> slight increase
+        this.updateCSI(2);
       }
+      
+      this.lastScrollY = currentY;
+      this.lastScrollTime = now;
     }
-
-    this.lastScrollY = currentY;
-    this.lastScrollTime = now;
 
     this.resetStagnationTimer();
   }

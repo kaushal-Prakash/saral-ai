@@ -62,6 +62,7 @@ const themeStyles = {
     // The actual values combine theme base with adaptive deltas
     container.style.lineHeight = "calc(var(--theme-line-height) + var(--adaptive-line-height-delta, 0em))";
     container.style.letterSpacing = "calc(var(--theme-letter-spacing) + var(--adaptive-letter-spacing, 0em))";
+    container.style.transition = "font-size 0.5s ease-in-out, line-height 0.5s ease-in-out, letter-spacing 0.5s ease-in-out";
     
     container.style.setProperty('--bionic-color', style.bionicColor);
 
