@@ -202,6 +202,11 @@ function resetHighlights() {
 
   function playPrevSentence() {
     if (!speechState.prepared || speechState.sentenceSpans.length === 0) return;
+    
+    if (typeof window.adaptiveEngine !== 'undefined') {
+      window.adaptiveEngine.recordReread();
+    }
+
     window.speechSynthesis.cancel();
     speechState.isPlaying = true;
     let prevIndex = speechState.currentIndex - 1;

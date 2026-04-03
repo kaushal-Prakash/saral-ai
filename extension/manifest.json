@@ -23,6 +23,7 @@
         "core/helpers.js",
         "core/cls.js",
         "core/theme.js",
+        "core/adaptive.js",
         "core/speech.js",
         "core/overlay.js",
         "core/reader-mode.js",

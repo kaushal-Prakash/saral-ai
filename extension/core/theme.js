@@ -54,8 +54,15 @@ const themeStyles = {
     container.style.color = style.color;
     container.style.fontFamily = style.fontFamily;
     container.style.fontStyle = style.fontStyle || "normal";
-    container.style.lineHeight = style.lineHeight;
-    container.style.letterSpacing = style.letterSpacing;
+    
+    // Set base theme properties as CSS variables to allow adaptive.js to modify them
+    container.style.setProperty('--theme-line-height', style.lineHeight);
+    container.style.setProperty('--theme-letter-spacing', style.letterSpacing === 'normal' ? '0em' : style.letterSpacing);
+    
+    // The actual values combine theme base with adaptive deltas
+    container.style.lineHeight = "calc(var(--theme-line-height) + var(--adaptive-line-height-delta, 0em))";
+    container.style.letterSpacing = "calc(var(--theme-letter-spacing) + var(--adaptive-letter-spacing, 0em))";
+    
     container.style.setProperty('--bionic-color', style.bionicColor);
 
     const speedSelect = document.getElementById("saral-speed");

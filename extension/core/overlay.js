@@ -129,6 +129,10 @@ function ensureOverlayShell() {
       });
 
       overlay.addEventListener("scroll", () => {
+        if (typeof window.adaptiveEngine !== 'undefined') {
+          window.adaptiveEngine.handleScroll(overlay);
+        }
+
         if (overlay.scrollTop > 300) {
           goToTopBtn.style.display = "block";
           setTimeout(() => (goToTopBtn.style.opacity = "1"), 10); // Trigger transition

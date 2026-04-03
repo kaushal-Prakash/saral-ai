@@ -129,6 +129,75 @@ function toggleFocusMode() {
     const overlay = document.getElementById("saral-reader-overlay");
     if (overlay) overlay.remove();
 
+    if (typeof window.adaptiveEngine !== 'undefined') {
+      window.adaptiveEngine.reset();
+    }
+
     document.body.style.overflow = "";
     setReaderReady(false);
   }
+
+  window.triggerAggressiveSimplification = function() {
+    if (currentStreamPort) {
+      try { currentStreamPort.disconnect(); } catch (e) {}
+    }
+    
+    // Hard reset UI for re-fetch
+    const combinedText = extractReadableText();
+    streamBuffer = "";
+    setReaderReady(false);
+
+    createOrUpdateOverlay(`
+      <div id="saral-stream-output">
+        <div id="saral-generating-msg" class="saral-generating">
+          ⚠️ High overload detected by Adaptive Engine. Re-analyzing with aggressive simplification...
+        </div>
+      </div>
+    `);
+
+    currentStreamPort = chrome.runtime.connect({ name: "saral-stream" });
+    
+    const outputDiv = document.getElementById("saral-stream-output");
+
+    currentStreamPort.postMessage({
+      action: "fetchStream",
+      text: combinedText,
+      aggressive: true,
+    });
+
+    currentStreamPort.onMessage.addListener((msg) => {
+      if (!outputDiv) return;
+
+      if (msg.error) {
+        outputDiv.innerHTML = `<span style="color:#ea4335"><strong>❌ Error:</strong> ${escapeHTML(msg.error)}</span>`;
+        setReaderReady(false);
+        setStatus("Stream failed.");
+        return;
+      }
+
+      if (msg.done) {
+        currentStreamPort?.disconnect();
+        currentStreamPort = null;
+
+        outputDiv.innerHTML = formatFinalHTML(streamBuffer);
+        prepareSpeechContent();
+        setReaderReady(true);
+        setStatus("Ready. You can read aloud.");
+        return;
+      }
+
+      if (msg.chunk) {
+        const generatingMsg = document.getElementById("saral-generating-msg");
+        if (generatingMsg) generatingMsg.remove();
+
+        streamBuffer += msg.chunk;
+        outputDiv.innerHTML = formatPartialHTML(streamBuffer);
+        setStatus("Simplifying aggressively...");
+      }
+    });
+
+    // Reset adaptive engine so it gives the user time to read the new text
+    if (typeof window.adaptiveEngine !== 'undefined') {
+      window.adaptiveEngine.reset();
+    }
+  };
