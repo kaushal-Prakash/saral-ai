@@ -1,100 +1,140 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const { GoogleGenAI } = require('@google/genai');
-const rateLimit = require('express-rate-limit');
-
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per window
-    message: {
-        success: false,
-        error: "Too many requests, please try again later."
-    },
-    standardHeaders: true,
-    legacyHeaders: false
-});
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const { GoogleGenAI } = require("@google/genai");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    success: false,
+    error: "Too many requests, please try again later.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(limiter);
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
 
-// CHANGED: Updated the route to indicate it's a stream
-app.post('/api/simplify/stream', async (req, res) => {
-    let text = req.body?.text;
-    let aggressive = req.body?.aggressive || false;
+app.get("/health", (_req, res) => {
+  res.status(200).json({ ok: true });
+});
 
-    // --- 1. Set SSE Headers (Crucial for streaming) ---
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
+function buildPrompt(text, aggressive) {
+  if (aggressive) {
+    return `
+You are Saral AI, an accessibility assistant for HIGH cognitive overload.
 
-    try {
-        console.log(`Received streaming request to simplify (Aggressive Mode: ${aggressive})`);
-        
-        if (!text) {
-            res.write(`data: ${JSON.stringify({ error: 'Text is required' })}\n\n`);
-            return res.end();
-        }
-        
-        let promptInstruction = `
-            You are Saral AI, an accessibility assistant. Rewrite the following text to reduce cognitive load.
-            - Use simple, direct language (5th-grade reading level).
-            - Remove metaphors, idioms, and complex jargon.
-            - Break up long, winding sentences into shorter ones.
-        `;
+Rewrite the text into a very clean, simple, structured format.
 
-        if (aggressive) {
-            promptInstruction = `
-                You are Saral AI, an accessibility assistant. The user is currently experiencing HIGH cognitive overload from visual clutter or complex text. 
-                - Be EXTREMELY concise.
-                - Use bullet points to summarize key ideas where possible.
-                - Do not use words with more than 3 syllables.
-                - Prioritize absolute clarity over preserving the original writing style.
-            `;
-        }
+Rules:
+- Use ONLY plain text
+- Use short lines
+- Use "-" for bullets
+- Keep sentences very short
+- Use simple vocabulary
+- Group related ideas together
+- Do NOT use markdown
+- Do NOT use HTML
+- Do NOT explain your rules
 
-        const prompt = `
-            ${promptInstruction}
-            - Output ONLY the simplified text. Do not add conversational filler.
-            
-            Text to simplify:
-            ${text}
-        `;
+Text:
+${text}
+`.trim();
+  }
 
-        // --- 2. Use generateContentStream instead of generateContent ---
-        const responseStream = await genAI.models.generateContentStream({
-            model: "gemini-3.1-flash-lite-preview",
-            contents: prompt,
-        });
-        
-        // --- 3. Pipe the chunks to the client instantly ---
-        for await (const chunk of responseStream) {
-            if (chunk.text) {
-                // SSE format requires "data: " followed by stringified JSON and exactly two newlines
-                res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-            }
-        }
+  return `
+You are Saral AI, an accessibility assistant.
 
-        // --- 4. Close the stream ---
-        res.write(`data: [DONE]\n\n`);
-        res.end();
+Rewrite the text into clean, structured plain text for easy reading.
 
-    } catch (error) {
-        console.error("🚨 AI API Error Details:", error); 
-        
-        // Because headers are already sent, we must send the error as an SSE stream event
-        const errorMessage = error.status == 503 
-            ? "API is overloaded, please try again." 
-            : (error.message || "Unknown API Error");
-            
-        res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
-        res.end();
+Rules:
+- Use ONLY plain text
+- Use short paragraphs
+- Use "-" for bullet points when useful
+- Keep sentences short and direct
+- Group related ideas together
+- Preserve the meaning
+- Do NOT use markdown
+- Do NOT use HTML
+- Do NOT explain your rules
+
+Text:
+${text}
+`.trim();
+}
+
+app.post("/api/simplify/stream", async (req, res) => {
+  const text = typeof req.body?.text === "string" ? req.body.text.trim() : "";
+  const aggressive = Boolean(req.body?.aggressive);
+
+  res.status(200);
+  res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+
+  if (typeof res.flushHeaders === "function") {
+    res.flushHeaders();
+  }
+
+  let aborted = false;
+  const markAborted = () => {
+    aborted = true;
+  };
+
+  req.on("close", markAborted);
+  req.on("aborted", markAborted);
+
+  try {
+    if (!text) {
+      res.write(`data: ${JSON.stringify({ error: "Text is required" })}\n\n`);
+      return res.end();
     }
+
+    const prompt = buildPrompt(text, aggressive);
+
+    const responseStream = await genAI.models.generateContentStream({
+      model: "gemini-3.1-flash-lite-preview",
+      contents: prompt,
+    });
+
+    for await (const chunk of responseStream) {
+      if (aborted) break;
+
+      const piece = chunk?.text;
+      if (piece) {
+        res.write(`data: ${JSON.stringify({ text: piece })}\n\n`);
+      }
+    }
+
+    if (!aborted) {
+      res.write("data: [DONE]\n\n");
+    }
+    res.end();
+  } catch (error) {
+    const errorMessage =
+      error?.status === 503
+        ? "API is overloaded, please try again."
+        : error?.message || "Unknown API error";
+
+    if (!res.writableEnded) {
+      res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
+      res.end();
+    }
+  }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Saral AI Backend running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Saral AI Backend running on port ${PORT}`);
+});
