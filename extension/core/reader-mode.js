@@ -39,6 +39,7 @@ function toggleFocusMode() {
       setTimeout(() => {
         createOrUpdateOverlay(formatFinalHTML(streamBuffer));
         prepareSpeechContent();
+        if (typeof window.saralInjectLinks === 'function') window.saralInjectLinks();
         setReaderReady(true);
         setStatus("Ready. Resumed from previous session.");
         
@@ -89,6 +90,7 @@ function toggleFocusMode() {
         }
         
         prepareSpeechContent();
+        if (typeof window.saralInjectLinks === 'function') window.saralInjectLinks();
         setReaderReady(true);
         setStatus("Ready. You can read aloud.");
       }, 200);
@@ -141,6 +143,7 @@ function toggleFocusMode() {
           window.saralSaveSessionState({ text: streamBuffer });
         }
         prepareSpeechContent();
+        if (typeof window.saralInjectLinks === 'function') window.saralInjectLinks();
         setReaderReady(true);
         setStatus("Ready. You can read aloud.");
         return;

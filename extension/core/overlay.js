@@ -34,7 +34,11 @@ function ensureOverlayShell() {
       closeBtn.innerHTML = "&times;";
       closeBtn.title = "Dismiss overlay for this page";
       closeBtn.addEventListener("click", () => {
+        // Use toggleFocusMode so storage is correctly updated to false
+        // This ensures the reader doesn't auto-reopen on next page load
         deactivateReaderMode();
+        isFocusModeOn = false;
+        chrome.storage.local.set({ focusModeEnabled: false });
       });
 
       const title = document.createElement("h1");

@@ -27,6 +27,7 @@
         "core/adaptive.js",
         "core/speech.js",
         "core/overlay.js",
+        "core/link-scrapper.js",
         "core/reader-mode.js",
         "content.js"
       ],
