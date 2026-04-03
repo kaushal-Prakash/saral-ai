@@ -159,14 +159,19 @@ function injectBaseStylesOnce() {
     }
 
     #saral-reader-content .saral-toolbar {
+      position: sticky;
+      top: 10px;
+      z-index: 10;
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       align-items: center;
-      margin: 10px 0 16px;
+      margin: 10px 0px 16px;
       padding: 12px;
-      border-radius: 14px;
+      border-radius: 6px;
+      backdrop-filter: blur(15px);
       background: rgba(127, 127, 127, 0.08);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
     }
 
     #saral-reader-content .saral-toolbar-right {
