@@ -4,6 +4,7 @@
 // ------------------------------
 var isFocusModeOn = false;
 var isBionicReadingOn = false;
+var isGuidedLearningOn = false;
 var currentTheme = "default";
 var currentStreamPort = null;
 var streamBuffer = "";
@@ -35,9 +36,10 @@ if (!isBlacklisted) {
   injectBaseStylesOnce();
 
   // Initial load check
-  chrome.storage.local.get(["focusModeEnabled", "saralTheme", "isBionicReadingOn"], (result) => {
+  chrome.storage.local.get(["focusModeEnabled", "saralTheme", "isBionicReadingOn", "isGuidedLearningOn"], (result) => {
     if (result.saralTheme) currentTheme = result.saralTheme;
     if (result.isBionicReadingOn) isBionicReadingOn = result.isBionicReadingOn;
+    if (result.isGuidedLearningOn) isGuidedLearningOn = result.isGuidedLearningOn;
 
     if (result.focusModeEnabled) {
       isFocusModeOn = true;
@@ -78,6 +80,13 @@ if (!isBlacklisted) {
       isBionicReadingOn = request.state;
       applyBionicFormatting();
       sendResponse({ status: "bionic updated" });
+    } else if (request.action === "toggleGuidedLearning") {
+      isGuidedLearningOn = request.state;
+      const prevBtn = document.getElementById("saral-prev-btn");
+      const nextBtn = document.getElementById("saral-next-btn");
+      if (prevBtn) prevBtn.style.display = isGuidedLearningOn ? "inline-block" : "none";
+      if (nextBtn) nextBtn.style.display = isGuidedLearningOn ? "inline-block" : "none";
+      sendResponse({ status: "guided updated" });
     }
   });
 

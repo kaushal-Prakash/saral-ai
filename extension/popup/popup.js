@@ -92,6 +92,28 @@ bionicSwitch.addEventListener('change', (e) => {
     });
 });
 
+// --- Guided Learning Handling ---
+const guidedSwitch = document.getElementById('guidedSwitch');
+
+chrome.storage.local.get(['isGuidedLearningOn'], (result) => {
+    if (result.isGuidedLearningOn) {
+        guidedSwitch.checked = true;
+    }
+});
+
+guidedSwitch.addEventListener('change', (e) => {
+    const isGuided = e.target.checked;
+    
+    chrome.storage.local.set({ isGuidedLearningOn: isGuided }, () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { 
+                action: 'toggleGuidedLearning', 
+                state: isGuided 
+            });
+        });
+    });
+});
+
 // Initial UI sync
 updateFocusBtnUI();
 

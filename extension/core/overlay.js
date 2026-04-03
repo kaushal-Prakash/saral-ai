@@ -37,6 +37,19 @@ function ensureOverlayShell() {
       stopBtn.className = "saral-btn saral-btn-danger";
       stopBtn.textContent = "Stop";
 
+      const prevBtn = document.createElement("button");
+      prevBtn.id = "saral-prev-btn";
+      prevBtn.className = "saral-btn";
+      prevBtn.textContent = "Prev (<)";
+
+      const nextBtn = document.createElement("button");
+      nextBtn.id = "saral-next-btn";
+      nextBtn.className = "saral-btn";
+      nextBtn.textContent = "Next (>)";
+
+      prevBtn.style.display = isGuidedLearningOn ? "inline-block" : "none";
+      nextBtn.style.display = isGuidedLearningOn ? "inline-block" : "none";
+
       const rightSide = document.createElement("div");
       rightSide.className = "saral-toolbar-right";
 
@@ -66,6 +79,8 @@ function ensureOverlayShell() {
       toolbar.appendChild(readBtn);
       toolbar.appendChild(pauseBtn);
       toolbar.appendChild(stopBtn);
+      toolbar.appendChild(prevBtn);
+      toolbar.appendChild(nextBtn);
       toolbar.appendChild(rightSide);
 
       const status = document.createElement("div");
@@ -156,8 +171,12 @@ function ensureOverlayShell() {
     const readBtn = document.getElementById("saral-read-btn");
     const pauseBtn = document.getElementById("saral-pause-btn");
     const stopBtn = document.getElementById("saral-stop-btn");
+    const prevBtn = document.getElementById("saral-prev-btn");
+    const nextBtn = document.getElementById("saral-next-btn");
 
     if (readBtn) readBtn.disabled = !ready;
     if (pauseBtn) pauseBtn.disabled = !ready;
     if (stopBtn) stopBtn.disabled = !ready;
+    if (prevBtn) prevBtn.disabled = !ready;
+    if (nextBtn) nextBtn.disabled = !ready;
   }

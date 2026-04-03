@@ -114,6 +114,14 @@ function resetHighlights() {
     utterance.volume = 1;
 
     utterance.onend = () => {
+      // GUIDED LEARNING LOGIC: Pause after completion instead of advancing
+      if (isGuidedLearningOn) {
+        speechState.isPlaying = false;
+        setStatus("Waiting... (Press Next)");
+        updateSpeechButtons();
+        return;
+      }
+      
       if (!speechState.isPlaying) return;
       speakSentence(index + 1);
     };
@@ -180,6 +188,27 @@ function resetHighlights() {
     updateSpeechButtons();
   }
 
+  function playNextSentence() {
+    if (!speechState.prepared || speechState.sentenceSpans.length === 0) return;
+    window.speechSynthesis.cancel();
+    speechState.isPlaying = true;
+    let nextIndex = speechState.currentIndex + 1;
+    if (nextIndex >= speechState.sentenceSpans.length) {
+      finishReading();
+      return;
+    }
+    speakSentence(nextIndex);
+  }
+
+  function playPrevSentence() {
+    if (!speechState.prepared || speechState.sentenceSpans.length === 0) return;
+    window.speechSynthesis.cancel();
+    speechState.isPlaying = true;
+    let prevIndex = speechState.currentIndex - 1;
+    if (prevIndex < 0) prevIndex = 0;
+    speakSentence(prevIndex);
+  }
+
   function bindSpeechControls() {
     const readBtn = document.getElementById("saral-read-btn");
     const pauseBtn = document.getElementById("saral-pause-btn");
@@ -201,10 +230,38 @@ function resetHighlights() {
       stopBtn.addEventListener("click", stopReading);
     }
 
+    const prevBtn = document.getElementById("saral-prev-btn");
+    const nextBtn = document.getElementById("saral-next-btn");
+
+    if (prevBtn && !prevBtn.dataset.bound) {
+      prevBtn.dataset.bound = "true";
+      prevBtn.addEventListener("click", playPrevSentence);
+    }
+
+    if (nextBtn && !nextBtn.dataset.bound) {
+      nextBtn.dataset.bound = "true";
+      nextBtn.addEventListener("click", playNextSentence);
+    }
+
     if (speedSelect && !speedSelect.dataset.bound) {
       speedSelect.dataset.bound = "true";
       speedSelect.addEventListener("change", (e) => {
         speechState.rate = Number(e.target.value) || 1;
+      });
+    }
+
+    if (!window.saralSpeechKeysBound) {
+      window.saralSpeechKeysBound = true;
+      document.addEventListener("keydown", (e) => {
+        if (!isFocusModeOn || !contentReady) return;
+        
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          playNextSentence();
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          playPrevSentence();
+        }
       });
     }
 
