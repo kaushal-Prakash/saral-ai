@@ -896,7 +896,7 @@ if (!isBlacklisted) {
     const speedSelect = document.getElementById("saral-speed");
     if (speedSelect) {
       speedSelect.style.fontFamily = style.fontFamily;
-      speedSelect.style.color = style.color;
+      speedSelect.style.color = "#000";
     }
 
     const buttons = container.querySelectorAll(".saral-btn");
