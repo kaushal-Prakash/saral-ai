@@ -53,22 +53,7 @@ function activateReaderMode() {
       return; 
   }
 
-  // UPDATED: Removed hardcoded color #666 from the <p> tag
-  createOrUpdateOverlay(`
-        <div style="text-align: center; margin-top: 50px;">
-            <h2 style="color: #4285f4;">✨ Saral AI is analyzing this page...</h2>
-            <p>Simplifying text and reducing cognitive load.</p>
-        </div>
-  `);
-
-  // Apply the current theme immediately
-  chrome.storage.local.get(["saralTheme"], (result) => {
-    const currentTheme = result.saralTheme || "default";
-    applyThemeToOverlay(currentTheme);
-  });
-
-  document.body.style.overflow = "hidden";
-
+  // 1. Extract text FIRST to evaluate it
   const paragraphs = Array.from(document.querySelectorAll("p, article"));
   const combinedText = paragraphs.map(p => p.innerText).join("\n").trim().substring(0, 3000);
 
@@ -80,6 +65,50 @@ function activateReaderMode() {
     return;
   }
 
+  // --- NEW: CONDITIONAL AI LOGIC ---
+  // Evaluate text complexity to save API costs
+  let totalWords = combinedText.split(/\s+/).length;
+  let totalSentences = combinedText.split(/[.!?]+/).length;
+  let avgSentenceLength = totalSentences > 0 ? totalWords / totalSentences : 0;
+
+  // If sentences average more than 12 words, it's complex enough to need AI
+  const needsAI = avgSentenceLength > 12;
+
+  // Dynamically update the loading message so the user knows what's happening
+  let statusMessage = needsAI 
+      ? "✨ Saral AI is analyzing and simplifying complex text..." 
+      : "✅ Text is already simple. Applying visual accessibility themes...";
+
+  createOrUpdateOverlay(`
+        <div style="text-align: center; margin-top: 50px;">
+            <h2 style="color: #4285f4;">${statusMessage}</h2>
+        </div>
+  `);
+
+  // Apply the current theme immediately
+  chrome.storage.local.get(["saralTheme"], (result) => {
+    const currentTheme = result.saralTheme || "default";
+    applyThemeToOverlay(currentTheme);
+  });
+
+  document.body.style.overflow = "hidden";
+
+  // --- NEW: API BYPASS ---
+  if (!needsAI) {
+      // Simulate a tiny loading delay so the user sees the "Already simple" message
+      setTimeout(() => {
+          createOrUpdateOverlay(`
+              <h1 style="margin-bottom: 30px;">🧠 Saral AI Reader</h1>
+              <div style="line-height: 1.8;">
+                  <p><small><i>(API Bypassed: The original text is already written at an accessible reading level.)</i></small></p>
+                  ${combinedText.replace(/\n/g, "<br><br>")}
+              </div>
+          `);
+      }, 800);
+      return; // Exit the function early! Do not hit the backend!
+  }
+
+  // Only run this expensive fetch block if needsAI is TRUE
   chrome.runtime.sendMessage(
     { action: "fetchSimplify", text: combinedText },
     (response) => {
@@ -92,7 +121,6 @@ function activateReaderMode() {
         return;
       }
 
-      // UPDATED: Removed hardcoded color #222 from the <h1> tag
       createOrUpdateOverlay(`
           <h1 style="margin-bottom: 30px;">🧠 Saral AI Reader</h1>
           <div style="line-height: 1.8;">
@@ -228,3 +256,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ status: "theme updated" });
   }
 });
+
+// content.js - Proactive CLS check on page load
+setTimeout(() => {
+    if (!isFocusModeOn) { // Only check if they aren't already in reader mode
+        const currentScore = calculateCLS();
+        if (currentScore > 75) {
+            // Create a small, dismissible prompt
+            const prompt = document.createElement('div');
+            prompt.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 2147483646;
+                background: #ea4335; color: white; padding: 15px 20px;
+                border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                font-family: Arial, sans-serif; cursor: pointer;
+            `;
+            prompt.innerHTML = `<strong>🧠 High Cognitive Load (${currentScore})</strong><br>Click here to simplify this page.`;
+            
+            prompt.addEventListener('click', () => {
+                toggleFocusMode();
+                prompt.remove();
+            });
+            
+            document.body.appendChild(prompt);
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => prompt.remove(), 10000);
+        }
+    }
+}, 2000); // Wait 2 seconds for the page to fully load its DOM
