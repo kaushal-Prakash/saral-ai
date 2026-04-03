@@ -41,7 +41,7 @@ body {
 .card {
     background: #ffffff; 
     padding: 16px; 
-    border-radius: 8px; 
+    border-radius: 16px; 
     margin-bottom: 16px; 
     box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); /* Material Elevation 1 */
 }
@@ -69,7 +69,7 @@ body {
 .theme-section select {
     width: 100%;
     padding: 10px 12px;
-    border-radius: 4px;
+    border-radius: 8px;
     border: 1px solid #dadce0;
     font-family: inherit;
     font-size: 14px;
@@ -103,7 +103,7 @@ body {
     width: 100%; 
     padding: 10px 24px; 
     border: none; 
-    border-radius: 4px; /* Material buttons use 4px, not 6px or pill */
+    border-radius: 12px; 
     cursor: pointer; 
     font-weight: 500; 
     font-family: 'Roboto', sans-serif;
