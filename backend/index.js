@@ -50,12 +50,12 @@ app.post('/api/simplify', async (req, res) => {
         res.json({ success: true, simplifiedText });
 
     } catch (error) {
+        console.log(error);
         if(error.ApiError.error.code == 503){
             console.log("API is overloaded")
             //returnging original text as fall back
             return res.json({ success: true, simplifiedText: text });
         }
-        console.error("AI Error:", error);
         res.status(500).json({ error: 'Failed to process text' });
     }
 });

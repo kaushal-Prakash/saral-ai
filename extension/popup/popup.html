@@ -2,17 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <style>
-        body { width: 300px; padding: 15px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h2 { margin: 0; color: #4285f4; }
-        .cls-card { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; border: 1px solid #ddd; }
-        .cls-score { font-size: 32px; font-weight: bold; margin: 10px 0; }
-        .cls-status { font-size: 14px; font-weight: bold; }
-        .controls button { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        #focusBtn { background: #34a853; color: white; font-size: 16px; }
-        .controls button:hover { opacity: 0.9; }
-    </style>
+    <link rel="stylesheet" href="popup.css">
 </head>
 <body>
     <div class="header">
@@ -26,10 +16,20 @@
         <div class="cls-status" id="clsStatus">Analyzing page...</div>
     </div>
 
+    <div class="theme-section">
+        <label for="themeSelect">Reading Profile:</label>
+        <select id="themeSelect">
+            <option value="default">Default (Clean)</option>
+            <option value="adhd">ADHD (High Focus)</option>
+            <option value="autism">Autism (Low Sensory)</option>
+            <option value="dyslexia">Dyslexia (Readability)</option>
+        </select>
+    </div>
+
     <div class="controls">
         <button id="focusBtn">Enable Saral Reader</button>
     </div>
 
-    <script src="/popup/popup.js"></script>
+    <script src="popup.js"></script>
 </body>
 </html>

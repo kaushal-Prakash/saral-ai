@@ -43,6 +43,32 @@ function updateFocusBtnUI() {
     });
 }
 
+// --- Theme Handling ---
+const themeSelect = document.getElementById('themeSelect');
+
+// Load saved theme on popup open
+chrome.storage.local.get(['saralTheme'], (result) => {
+    if (result.saralTheme) {
+        themeSelect.value = result.saralTheme;
+    }
+});
+
+// Listen for dropdown changes
+themeSelect.addEventListener('change', (e) => {
+    const selectedTheme = e.target.value;
+    
+    // Save to storage
+    chrome.storage.local.set({ saralTheme: selectedTheme }, () => {
+        // Tell the active tab to update the overlay UI immediately
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { 
+                action: 'changeTheme', 
+                theme: selectedTheme 
+            });
+        });
+    });
+});
+
 // Initial UI sync
 updateFocusBtnUI();
 
