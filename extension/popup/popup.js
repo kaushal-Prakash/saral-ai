@@ -30,15 +30,16 @@ function updateCLSDisplay(score) {
     }
 }
 
+// --- Toggle Button Sync ---
 function updateFocusBtnUI() {
     chrome.storage.local.get(['focusModeEnabled'], (result) => {
         const btn = document.getElementById('focusBtn');
         if (result.focusModeEnabled) {
-            btn.innerText = "Disable Saral Reader";
-            btn.style.background = "#ea4335";
+            btn.innerText = "DISABLE SARAL READER";
+            btn.style.background = "#d93025"; 
         } else {
-            btn.innerText = "Enable Saral Reader (AI)";
-            btn.style.background = "#4285f4";
+            btn.innerText = "ENABLE SARAL READER";
+            btn.style.background = "#1a73e8";
         }
     });
 }

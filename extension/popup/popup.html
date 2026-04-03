@@ -2,32 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
     <div class="header">
-        <h2>🧠 Saral AI</h2>
-        <small>Cognitive Load Assistant</small>
+        <div class="header-content">
+            <span class="logo-icon">🧠</span>
+            <div class="header-text">
+                <h2>Saral AI</h2>
+                <small>Cognitive Load Assistant</small>
+            </div>
+        </div>
     </div>
 
-    <div class="cls-card">
-        <div>Cognitive Load Score (CLS)</div>
+    <div class="card cls-card">
+        <div class="cls-label">Cognitive Load Score</div>
         <div class="cls-score" id="clsValue">--</div>
         <div class="cls-status" id="clsStatus">Analyzing page...</div>
     </div>
 
-    <div class="theme-section">
-        <label for="themeSelect">Reading Profile:</label>
-        <select id="themeSelect">
-            <option value="default">Default (Clean)</option>
-            <option value="adhd">ADHD (High Focus)</option>
-            <option value="autism">Autism (Low Sensory)</option>
-            <option value="dyslexia">Dyslexia (Readability)</option>
-        </select>
+    <div class="card theme-section">
+        <label for="themeSelect">Reading Profile</label>
+        <div class="select-wrapper">
+            <select id="themeSelect">
+                <option value="default">Default (Clean)</option>
+                <option value="adhd">ADHD (High Focus)</option>
+                <option value="autism">Autism (Low Sensory)</option>
+                <option value="dyslexia">Dyslexia (Readability)</option>
+            </select>
+        </div>
     </div>
 
     <div class="controls">
-        <button id="focusBtn">Enable Saral Reader</button>
+        <button id="focusBtn" class="md-button">Enable Saral Reader</button>
     </div>
 
     <script src="popup.js"></script>

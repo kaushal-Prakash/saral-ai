@@ -1,60 +1,124 @@
 body { 
-    width: 300px; 
-    padding: 15px; 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    color: #333; 
+    width: 320px; 
+    padding: 16px; 
+    font-family: 'Roboto', sans-serif; 
+    color: #202124; /* Google's standard dark grey, not pure black */
+    background-color: #f8f9fa; /* Material Light Grey */
     margin: 0;
 }
 
-.header { text-align: center; margin-bottom: 20px; }
-.header h2 { margin: 0; color: #4285f4; }
+/* --- Header --- */
+.header { 
+    margin-bottom: 20px; 
+    border-bottom: 1px solid #dadce0;
+    padding-bottom: 12px;
+}
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.logo-icon {
+    font-size: 32px;
+}
+.header-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.header h2 { 
+    margin: 0; 
+    color: #1a73e8; /* Classic Google Blue */
+    font-size: 20px;
+    font-weight: 500;
+}
+.header small {
+    color: #5f6368;
+    font-size: 12px;
+}
 
-.cls-card { 
-    background: #f8f9fa; 
-    padding: 15px; 
+/* --- Cards (Material Design Containers) --- */
+.card {
+    background: #ffffff; 
+    padding: 16px; 
     border-radius: 8px; 
-    text-align: center; 
-    margin-bottom: 15px; 
-    border: 1px solid #ddd; 
+    margin-bottom: 16px; 
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); /* Material Elevation 1 */
 }
-.cls-score { font-size: 32px; font-weight: bold; margin: 10px 0; }
-.cls-status { font-size: 14px; font-weight: bold; }
 
-/* Theme Section Styles */
-.theme-section {
-    margin-bottom: 15px;
-    background: #fff;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-}
+/* --- CLS Section --- */
+.cls-card { text-align: center; }
+.cls-label { color: #5f6368; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.cls-score { font-size: 36px; font-weight: 400; margin: 8px 0; color: #202124; }
+.cls-status { font-size: 14px; font-weight: 500; }
+
+/* --- Theme Selection --- */
+.theme-section { padding: 12px 16px; }
 .theme-section label {
     display: block;
     font-size: 13px;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #555;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #202124;
+}
+
+/* Custom styled select box to look like Google's outlines */
+.select-wrapper {
+    position: relative;
 }
 .theme-section select {
     width: 100%;
-    padding: 8px;
+    padding: 10px 12px;
     border-radius: 4px;
-    border: 1px solid #ccc;
+    border: 1px solid #dadce0;
     font-family: inherit;
     font-size: 14px;
+    color: #202124;
+    background-color: transparent;
     cursor: pointer;
+    appearance: none; /* Removes default OS styling */
+    outline: none;
+    transition: border-color 0.2s;
+}
+.theme-section select:focus {
+    border-color: #1a73e8;
+    border-width: 2px;
+    padding: 9px 11px; /* Compensate for thicker border */
 }
 
-.controls button { 
-    width: 100%; 
-    padding: 12px; 
-    border: none; 
-    border-radius: 6px; 
-    cursor: pointer; 
-    font-weight: bold; 
-    transition: 0.2s; 
-    font-size: 16px;
-    background: #4285f4; /* Default blue, will be overridden by JS */
-    color: white;
+/* Adding a custom dropdown arrow */
+.select-wrapper::after {
+    content: "▼";
+    font-size: 10px;
+    color: #5f6368;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* Lets clicks pass through to the select element */
 }
-.controls button:hover { opacity: 0.9; }
+
+/* --- Buttons --- */
+.md-button { 
+    width: 100%; 
+    padding: 10px 24px; 
+    border: none; 
+    border-radius: 4px; /* Material buttons use 4px, not 6px or pill */
+    cursor: pointer; 
+    font-weight: 500; 
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    text-transform: uppercase; /* Classic Material look */
+    letter-spacing: 0.5px;
+    background: #1a73e8; 
+    color: white;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+.md-button:hover { 
+    background-color: #1b66c9; /* Slightly darker blue on hover */
+    box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15); /* Elevate on hover */
+}
+.md-button:active {
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); /* Return to flat on click */
+}
