@@ -28,6 +28,13 @@ function resetHighlights() {
     speechState.sentenceSpans = [];
     speechState.currentIndex = 0;
     speechState.prepared = false;
+    if (typeof window.saralGetSessionStateSync === 'function') {
+      const session = window.saralGetSessionStateSync();
+      if (session && session.speechIndex > 0) {
+        speechState.currentIndex = session.speechIndex;
+        setTimeout(() => highlightSentence(speechState.currentIndex), 100);
+      }
+    }
 
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
@@ -100,6 +107,11 @@ function resetHighlights() {
     }
 
     speechState.currentIndex = index;
+    
+    if (typeof window.saralSaveSessionState === 'function') {
+      window.saralSaveSessionState({ speechIndex: index });
+    }
+    
     highlightSentence(index);
 
     const sentence = speechState.sentences[index] || speechState.sentenceSpans[index]?.textContent?.trim();

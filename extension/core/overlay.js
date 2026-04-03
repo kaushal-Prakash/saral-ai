@@ -5,6 +5,27 @@ function ensureOverlayShell() {
       overlay = document.createElement("div");
       overlay.id = "saral-reader-overlay";
 
+      const progressContainer = document.createElement("div");
+      progressContainer.id = "saral-progress-container";
+      progressContainer.style.cssText = `
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 5px;
+        background: rgba(0,0,0,0.05);
+        z-index: 2147483647;
+      `;
+
+      const progressBar = document.createElement("div");
+      progressBar.id = "saral-progress-bar";
+      progressBar.style.cssText = `
+        height: 100%;
+        width: 0%;
+        background: #1a73e8;
+        transition: width 0.1s ease-out;
+      `;
+      progressContainer.appendChild(progressBar);
+      overlay.appendChild(progressContainer);
+
       const container = document.createElement("div");
       container.id = "saral-reader-content";
 
@@ -133,6 +154,16 @@ function ensureOverlayShell() {
           window.adaptiveEngine.handleScroll(overlay);
         }
 
+        const maxScroll = overlay.scrollHeight - overlay.clientHeight;
+        const scrollPercent = maxScroll > 0 ? overlay.scrollTop / maxScroll : 0;
+        
+        const pb = document.getElementById("saral-progress-bar");
+        if (pb) pb.style.width = (scrollPercent * 100) + "%";
+
+        if (typeof window.saralSaveSessionState === 'function') {
+          window.saralSaveSessionState({ scrollPercent });
+        }
+
         if (overlay.scrollTop > 300) {
           goToTopBtn.style.display = "block";
           setTimeout(() => (goToTopBtn.style.opacity = "1"), 10); // Trigger transition
@@ -183,4 +214,24 @@ function ensureOverlayShell() {
     if (stopBtn) stopBtn.disabled = !ready;
     if (prevBtn) prevBtn.disabled = !ready;
     if (nextBtn) nextBtn.disabled = !ready;
+  }
+
+  window.saralRestoreScroll = function(percent) {
+    const overlay = document.getElementById("saral-reader-overlay");
+    if (!overlay) return;
+    
+    let attempts = 0;
+    const scrollInterval = setInterval(() => {
+      const maxScroll = overlay.scrollHeight - overlay.clientHeight;
+      if (maxScroll > 0) {
+        overlay.scrollTo({ top: maxScroll * percent, behavior: "instant" });
+        const pb = document.getElementById("saral-progress-bar");
+        if (pb) pb.style.width = (percent * 100) + "%";
+      }
+      
+      attempts++;
+      if (attempts >= 4) {
+        clearInterval(scrollInterval);
+      }
+    }, 150);
   }

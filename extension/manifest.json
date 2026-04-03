@@ -20,6 +20,7 @@
         "*://*.duckduckgo.com/*"
       ],
       "js": [
+        "core/session.js",
         "core/helpers.js",
         "core/cls.js",
         "core/theme.js",

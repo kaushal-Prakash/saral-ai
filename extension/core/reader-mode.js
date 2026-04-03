@@ -15,6 +15,40 @@ function toggleFocusMode() {
       return;
     }
 
+    if (typeof window.saralGetSessionState === 'function') {
+      window.saralGetSessionState((session) => {
+        proceedActivation(session);
+      });
+    } else {
+      proceedActivation(null);
+    }
+  }
+
+  function proceedActivation(session) {
+    if (session && session.text) {
+      setReaderReady(false);
+      document.body.style.overflow = "hidden";
+      streamBuffer = session.text;
+      
+      createOrUpdateOverlay(`
+        <div class="saral-generating">
+          (Resumed from previous session)
+        </div>
+      `);
+      
+      setTimeout(() => {
+        createOrUpdateOverlay(formatFinalHTML(streamBuffer));
+        prepareSpeechContent();
+        setReaderReady(true);
+        setStatus("Ready. Resumed from previous session.");
+        
+        if (session.scrollPercent && typeof window.saralRestoreScroll === 'function') {
+          window.saralRestoreScroll(session.scrollPercent);
+        }
+      }, 50);
+      return;
+    }
+
     const combinedText = extractReadableText();
 
     if (combinedText.length < 50) {
@@ -48,6 +82,12 @@ function toggleFocusMode() {
 
       setTimeout(() => {
         createOrUpdateOverlay(formatFinalHTML(combinedText));
+        
+        streamBuffer = combinedText;
+        if (typeof window.saralSaveSessionState === 'function') {
+          window.saralSaveSessionState({ text: streamBuffer });
+        }
+        
         prepareSpeechContent();
         setReaderReady(true);
         setStatus("Ready. You can read aloud.");
@@ -97,6 +137,9 @@ function toggleFocusMode() {
         currentStreamPort = null;
 
         outputDiv.innerHTML = formatFinalHTML(streamBuffer);
+        if (typeof window.saralSaveSessionState === 'function') {
+          window.saralSaveSessionState({ text: streamBuffer });
+        }
         prepareSpeechContent();
         setReaderReady(true);
         setStatus("Ready. You can read aloud.");
@@ -180,6 +223,9 @@ function toggleFocusMode() {
         currentStreamPort = null;
 
         outputDiv.innerHTML = formatFinalHTML(streamBuffer);
+        if (typeof window.saralSaveSessionState === 'function') {
+          window.saralSaveSessionState({ text: streamBuffer });
+        }
         prepareSpeechContent();
         setReaderReady(true);
         setStatus("Ready. You can read aloud.");
