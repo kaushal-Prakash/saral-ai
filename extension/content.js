@@ -15,7 +15,6 @@ chrome.storage.local.get(["focusModeEnabled"], (result) => {
 });
 
 // --- 1. Cognitive Load Score (CLS) Engine ---
-// UPDATED: Now returns an object with details so we can make smart decisions
 function calculateCLS() {
   const domElementCount = document.getElementsByTagName("*").length;
   let visualDensityScore = Math.min((domElementCount / 1500) * 40, 40);
@@ -80,26 +79,14 @@ function activateReaderMode() {
   let avgSentenceLength = totalSentences > 0 ? totalWords / totalSentences : 0;
   const needsAI = avgSentenceLength > 12;
 
-  // --- NEW: Decide if we need Aggressive Simplification based on CLS ---
   const currentCLS = calculateCLS();
-  // If text is super complex OR there are tons of ads, be aggressive
   const needsAggressiveSimplification = currentCLS.textComplexity > 25 || currentCLS.distractions > 20;
 
-  let statusMessage = needsAI 
-      ? (needsAggressiveSimplification ? "⚠️ High Overload Detected. Saral AI is aggressively summarizing..." : "✨ Saral AI is analyzing and simplifying complex text...") 
-      : "✅ Text is already simple. Applying visual accessibility themes...";
-
-  createOrUpdateOverlay(`
-        <div style="text-align: center; margin-top: 50px;">
-            <h2 style="color: #4285f4;">${statusMessage}</h2>
-        </div>
-  `);
-
+  // Render initial overlay layout
   chrome.storage.local.get(["saralTheme"], (result) => {
     const currentTheme = result.saralTheme || "default";
     applyThemeToOverlay(currentTheme);
   });
-
   document.body.style.overflow = "hidden";
 
   if (!needsAI) {
@@ -115,31 +102,54 @@ function activateReaderMode() {
       return; 
   }
 
-  // --- NEW: Pass the 'aggressive' flag to the background script ---
-  chrome.runtime.sendMessage(
-    { 
-        action: "fetchSimplify", 
-        text: combinedText,
-        aggressive: needsAggressiveSimplification 
-    },
-    (response) => {
-      if (chrome.runtime.lastError || !response || !response.success) {
-        createOrUpdateOverlay(`
-            <h2 style="color: #ea4335;">❌ Connection Error</h2>
-            <p>Make sure your local Node.js server is running.</p>
-            <small>${chrome.runtime.lastError?.message || response?.error}</small>
-        `);
-        return;
-      }
+  // --- NEW: Streaming Architecture Setup ---
+  // 1. Create the container where the text will stream into
+  createOrUpdateOverlay(`
+      <h1 style="margin-bottom: 30px;">🧠 Saral AI Reader</h1>
+      <div id="saral-stream-output" style="line-height: 1.8;">
+          <span id="saral-generating-msg" style="color: #888; font-style: italic;">
+              ${needsAggressiveSimplification ? "⚠️ High Overload Detected. Aggressively summarizing..." : "✨ Analyzing and simplifying complex text..."}
+          </span>
+      </div>
+  `);
 
-      createOrUpdateOverlay(`
-          <h1 style="margin-bottom: 30px;">🧠 Saral AI Reader</h1>
-          <div style="line-height: 1.8;">
-              ${response.data.simplifiedText.replace(/\n/g, "<br><br>")}
-          </div>
-      `);
-    }
-  );
+  // 2. Open a streaming connection to background.js
+  const port = chrome.runtime.connect({ name: "saral-stream" });
+  
+  // 3. Start the stream request
+  port.postMessage({ 
+      action: "fetchStream", 
+      text: combinedText, 
+      aggressive: needsAggressiveSimplification 
+  });
+
+  const outputDiv = document.getElementById("saral-stream-output");
+
+  // 4. Listen for chunks arriving from the background script
+  port.onMessage.addListener((msg) => {
+      if (!outputDiv) return;
+
+      if (msg.error) {
+          outputDiv.innerHTML = `<span style="color:#ea4335"><strong>❌ Connection Error:</strong> ${msg.error}</span>`;
+          return;
+      }
+      
+      if (msg.done) {
+          port.disconnect(); 
+          return;
+      }
+      
+      if (msg.chunk) {
+          // Remove the "Generating..." message as soon as the first word arrives
+          const generatingMsg = document.getElementById("saral-generating-msg");
+          if (generatingMsg) {
+              generatingMsg.remove();
+          }
+          
+          // Append the text chunk instantly
+          outputDiv.innerHTML += msg.chunk.replace(/\n/g, '<br/>');
+      }
+  });
 }
 
 function deactivateReaderMode() {
@@ -197,7 +207,10 @@ function createOrUpdateOverlay(contentHtml) {
 
   const textContainer = document.getElementById("saral-dynamic-text");
   if (textContainer) {
-      textContainer.innerHTML = contentHtml;
+      // Use += for streaming if the container already has the stream div, otherwise replace
+      if(contentHtml.includes('id="saral-stream-output"')){
+          textContainer.innerHTML = contentHtml;
+      }
   }
 }
 
@@ -227,7 +240,6 @@ function applyThemeToOverlay(themeName) {
 // --- 5. Message Listener ---
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getCLS") {
-    // UPDATED: Return the total score for the popup UI
     sendResponse({ score: calculateCLS().total });
   } else if (request.action === "toggleFocusMode") {
     toggleFocusMode();
@@ -241,7 +253,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Proactive CLS check on page load
 setTimeout(() => {
     if (!isFocusModeOn) { 
-        const currentScore = calculateCLS().total; // UPDATED to use .total
+        const currentScore = calculateCLS().total;
         if (currentScore > 75) {
             const prompt = document.createElement('div');
             prompt.style.cssText = `

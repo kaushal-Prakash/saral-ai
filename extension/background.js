@@ -1,24 +1,65 @@
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'fetchSimplify') {
-        fetch('http://localhost:3000/api/simplify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                text: request.text,
-                aggressive: request.aggressive 
-            })
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return response.json();
-        })
-        .then(data => sendResponse({ success: true, data: data }))
-        .catch(error => {
-            console.error("Background Fetch Error:", error);
-            sendResponse({ success: false, error: error.message });
+// --- 1. The Streaming Port Connection ---
+chrome.runtime.onConnect.addListener((port) => {
+    if (port.name === "saral-stream") {
+        port.onMessage.addListener(async (msg) => {
+            if (msg.action === "fetchStream") {
+                try {
+                    const response = await fetch('http://localhost:3000/api/simplify/stream', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            text: msg.text,
+                            aggressive: msg.aggressive 
+                        })
+                    });
+
+                    if (!response.body) throw new Error("No response body from server.");
+
+                    // Initialize the stream reader
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+
+                    // Continuously read the stream chunks
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break; // Exit loop when stream is finished
+                        
+                        // Decode the raw bytes into text
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+                        
+                        // Parse the Server-Sent Events (SSE) format
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const dataStr = line.replace('data: ', '').trim();
+                                
+                                if (dataStr === '[DONE]') {
+                                    port.postMessage({ done: true });
+                                    return;
+                                }
+                                
+                                if (dataStr) {
+                                    try {
+                                        const data = JSON.parse(dataStr);
+                                        if (data.error) {
+                                            port.postMessage({ error: data.error });
+                                        } else if (data.text) {
+                                            // Send the chunk to the frontend!
+                                            port.postMessage({ chunk: data.text });
+                                        }
+                                    } catch (err) {
+                                        console.error("Error parsing stream chunk:", err);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Background Fetch Error:", error);
+                    port.postMessage({ error: error.message });
+                }
+            }
         });
-        
-        return true; 
     }
 });
 

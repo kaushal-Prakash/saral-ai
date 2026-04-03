@@ -22,15 +22,24 @@ app.use(limiter);
 
 const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-app.post('/api/simplify', async (req, res) => {
+// CHANGED: Updated the route to indicate it's a stream
+app.post('/api/simplify/stream', async (req, res) => {
     let text = req.body?.text;
-    let aggressive = req.body?.aggressive || false; // NEW: Receive the CLS decision
+    let aggressive = req.body?.aggressive || false;
+
+    // --- 1. Set SSE Headers (Crucial for streaming) ---
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
     try {
-        console.log(`Received request to simplify (Aggressive Mode: ${aggressive})`);
-        if (!text) return res.status(400).json({ error: 'Text is required' });
+        console.log(`Received streaming request to simplify (Aggressive Mode: ${aggressive})`);
         
-        // --- NEW: Dynamic Prompt Engineering based on CLS ---
+        if (!text) {
+            res.write(`data: ${JSON.stringify({ error: 'Text is required' })}\n\n`);
+            return res.end();
+        }
+        
         let promptInstruction = `
             You are Saral AI, an accessibility assistant. Rewrite the following text to reduce cognitive load.
             - Use simple, direct language (5th-grade reading level).
@@ -56,26 +65,34 @@ app.post('/api/simplify', async (req, res) => {
             ${text}
         `;
 
-        const result = await genAI.models.generateContent({
+        // --- 2. Use generateContentStream instead of generateContent ---
+        const responseStream = await genAI.models.generateContentStream({
             model: "gemini-3.1-flash-lite-preview",
             contents: prompt,
         });
         
-        const simplifiedText = result.text;
-        res.json({ success: true, simplifiedText });
+        // --- 3. Pipe the chunks to the client instantly ---
+        for await (const chunk of responseStream) {
+            if (chunk.text) {
+                // SSE format requires "data: " followed by stringified JSON and exactly two newlines
+                res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+            }
+        }
+
+        // --- 4. Close the stream ---
+        res.write(`data: [DONE]\n\n`);
+        res.end();
 
     } catch (error) {
         console.error("🚨 AI API Error Details:", error); 
         
-        if(error.status == 503){
-            console.log("API is overloaded");
-            return res.json({ success: true, simplifiedText: text });
-        }
-        
-        res.status(500).json({ 
-            error: 'Failed to process text', 
-            details: error.message || "Unknown API Error" 
-        });
+        // Because headers are already sent, we must send the error as an SSE stream event
+        const errorMessage = error.status == 503 
+            ? "API is overloaded, please try again." 
+            : (error.message || "Unknown API Error");
+            
+        res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
+        res.end();
     }
 });
 
