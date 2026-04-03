@@ -117,6 +117,17 @@ function applyBionicFormatting() {
   });
 }
 
+function applyBoldFormatting() {
+  const container = document.getElementById("saral-reader-content");
+  if (!container) return;
+  
+  if (typeof isBoldAllOn !== 'undefined' && isBoldAllOn) {
+    container.classList.add("saral-bold-all");
+  } else {
+    container.classList.remove("saral-bold-all");
+  }
+}
+
 function injectBaseStylesOnce() {
   if (document.getElementById("saral-ai-style")) return;
 
@@ -287,6 +298,11 @@ function injectBaseStylesOnce() {
     .saral-bionic {
       font-weight: bold;
       color: var(--bionic-color, inherit);
+    }
+
+    .saral-bold-all,
+    .saral-bold-all * {
+      font-weight: bold !important;
     }
 
     #saral-reader-content * {

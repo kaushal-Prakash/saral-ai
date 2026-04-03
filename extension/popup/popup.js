@@ -70,24 +70,51 @@ themeSelect.addEventListener('change', (e) => {
     });
 });
 
-// --- Bionic Handling ---
+// --- Bionic & Bold Handling ---
 const bionicSwitch = document.getElementById('bionicSwitch');
+const boldAllSwitch = document.getElementById('boldAllSwitch');
 
-chrome.storage.local.get(['isBionicReadingOn'], (result) => {
+chrome.storage.local.get(['isBionicReadingOn', 'isBoldAllOn'], (result) => {
     if (result.isBionicReadingOn) {
         bionicSwitch.checked = true;
+    }
+    if (result.isBoldAllOn) {
+        boldAllSwitch.checked = true;
     }
 });
 
 bionicSwitch.addEventListener('change', (e) => {
     const isBionic = e.target.checked;
     
+    if (isBionic) {
+        boldAllSwitch.checked = false;
+        chrome.storage.local.set({ isBoldAllOn: false });
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleBoldAll', state: false });
+        });
+    }
+    
     chrome.storage.local.set({ isBionicReadingOn: isBionic }, () => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            chrome.tabs.sendMessage(tabs[0].id, { 
-                action: 'toggleBionic', 
-                state: isBionic 
-            });
+            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleBionic', state: isBionic });
+        });
+    });
+});
+
+boldAllSwitch.addEventListener('change', (e) => {
+    const isBoldAll = e.target.checked;
+    
+    if (isBoldAll) {
+        bionicSwitch.checked = false;
+        chrome.storage.local.set({ isBionicReadingOn: false });
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleBionic', state: false });
+        });
+    }
+    
+    chrome.storage.local.set({ isBoldAllOn: isBoldAll }, () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleBoldAll', state: isBoldAll });
         });
     });
 });

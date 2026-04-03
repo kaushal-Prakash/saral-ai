@@ -92,4 +92,8 @@ const themeStyles = {
           : "#1f1f1f";
       }
     });
+
+    if (typeof applyBoldFormatting === 'function') {
+      applyBoldFormatting();
+    }
   }

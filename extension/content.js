@@ -5,6 +5,7 @@
 var isFocusModeOn = false;
 var isBionicReadingOn = false;
 var isGuidedLearningOn = false;
+var isBoldAllOn = false;
 var currentTheme = "default";
 var currentStreamPort = null;
 var streamBuffer = "";
@@ -36,10 +37,11 @@ if (!isBlacklisted) {
   injectBaseStylesOnce();
 
   // Initial load check
-  chrome.storage.local.get(["focusModeEnabled", "saralTheme", "isBionicReadingOn", "isGuidedLearningOn"], (result) => {
+  chrome.storage.local.get(["focusModeEnabled", "saralTheme", "isBionicReadingOn", "isGuidedLearningOn", "isBoldAllOn"], (result) => {
     if (result.saralTheme) currentTheme = result.saralTheme;
     if (result.isBionicReadingOn) isBionicReadingOn = result.isBionicReadingOn;
     if (result.isGuidedLearningOn) isGuidedLearningOn = result.isGuidedLearningOn;
+    if (result.isBoldAllOn) isBoldAllOn = result.isBoldAllOn;
 
     if (result.focusModeEnabled) {
       isFocusModeOn = true;
@@ -78,8 +80,12 @@ if (!isBlacklisted) {
       sendResponse({ status: "theme updated" });
     } else if (request.action === "toggleBionic") {
       isBionicReadingOn = request.state;
-      applyBionicFormatting();
+      if (typeof applyBionicFormatting === 'function') applyBionicFormatting();
       sendResponse({ status: "bionic updated" });
+    } else if (request.action === "toggleBoldAll") {
+      isBoldAllOn = request.state;
+      if (typeof applyBoldFormatting === 'function') applyBoldFormatting();
+      sendResponse({ status: "bold updated" });
     } else if (request.action === "toggleGuidedLearning") {
       isGuidedLearningOn = request.state;
       const prevBtn = document.getElementById("saral-prev-btn");
