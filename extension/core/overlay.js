@@ -82,6 +82,52 @@ function ensureOverlayShell() {
       container.appendChild(status);
       container.appendChild(textContent);
       overlay.appendChild(container);
+
+      //--- Go to Top Button ---
+      const goToTopBtn = document.createElement("button");
+      goToTopBtn.innerHTML = "↑";
+      goToTopBtn.title = "Go to Top";
+      goToTopBtn.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #1a73e8;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: none;
+        z-index: 2147483647;
+        transition: opacity 0.3s ease, transform 0.2s ease;
+        opacity: 0;
+      `;
+      goToTopBtn.onmouseover = () => (goToTopBtn.style.transform = "scale(1.1)");
+      goToTopBtn.onmouseout = () => (goToTopBtn.style.transform = "scale(1)");
+
+      goToTopBtn.addEventListener("click", () => {
+        overlay.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      overlay.addEventListener("scroll", () => {
+        if (overlay.scrollTop > 300) {
+          goToTopBtn.style.display = "block";
+          setTimeout(() => (goToTopBtn.style.opacity = "1"), 10); // Trigger transition
+        } else {
+          goToTopBtn.style.opacity = "0";
+          setTimeout(() => {
+            if (overlay.scrollTop <= 300) goToTopBtn.style.display = "none";
+          }, 300); // Wait for transition
+        }
+      });
+
+      overlay.appendChild(goToTopBtn);
+      // -----------------------------
+
       document.body.appendChild(overlay);
 
       bindSpeechControls();
