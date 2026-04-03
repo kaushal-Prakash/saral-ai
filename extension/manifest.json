@@ -19,7 +19,15 @@
         "*://*.bing.com/*",
         "*://*.duckduckgo.com/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "core/helpers.js",
+        "core/cls.js",
+        "core/theme.js",
+        "core/speech.js",
+        "core/overlay.js",
+        "core/reader-mode.js",
+        "content.js"
+      ],
       "css": ["styles.css"]
     }
   ]

@@ -1,0 +1,117 @@
+function ensureOverlayShell() {
+    let overlay = document.getElementById("saral-reader-overlay");
+
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "saral-reader-overlay";
+
+      const container = document.createElement("div");
+      container.id = "saral-reader-content";
+
+      const closeBtn = document.createElement("button");
+      closeBtn.className = "saral-close";
+      closeBtn.innerHTML = "&times;";
+      closeBtn.title = "Dismiss overlay for this page";
+      closeBtn.addEventListener("click", () => {
+        deactivateReaderMode();
+      });
+
+      const title = document.createElement("h1");
+      title.textContent = "🧠 Saral AI Reader";
+
+      const toolbar = document.createElement("div");
+      toolbar.className = "saral-toolbar";
+
+      const readBtn = document.createElement("button");
+      readBtn.id = "saral-read-btn";
+      readBtn.className = "saral-btn saral-btn-primary";
+      readBtn.textContent = "Read Aloud";
+
+      const pauseBtn = document.createElement("button");
+      pauseBtn.id = "saral-pause-btn";
+      pauseBtn.className = "saral-btn";
+      pauseBtn.textContent = "Pause";
+
+      const stopBtn = document.createElement("button");
+      stopBtn.id = "saral-stop-btn";
+      stopBtn.className = "saral-btn saral-btn-danger";
+      stopBtn.textContent = "Stop";
+
+      const rightSide = document.createElement("div");
+      rightSide.className = "saral-toolbar-right";
+
+      const speedLabel = document.createElement("span");
+      speedLabel.textContent = "Speed";
+
+      const speedSelect = document.createElement("select");
+      speedSelect.id = "saral-speed";
+      speedSelect.className = "saral-speed";
+
+      [
+        ["0.75", "0.75x"],
+        ["1.0", "1x"],
+        ["1.15", "1.15x"],
+        ["1.3", "1.3x"],
+      ].forEach(([value, label]) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        if (value === "1.0") option.selected = true;
+        speedSelect.appendChild(option);
+      });
+
+      rightSide.appendChild(speedLabel);
+      rightSide.appendChild(speedSelect);
+
+      toolbar.appendChild(readBtn);
+      toolbar.appendChild(pauseBtn);
+      toolbar.appendChild(stopBtn);
+      toolbar.appendChild(rightSide);
+
+      const status = document.createElement("div");
+      status.id = "saral-status";
+      status.className = "saral-status";
+      status.textContent = "Preparing reader...";
+
+      const textContent = document.createElement("div");
+      textContent.id = "saral-dynamic-text";
+
+      container.appendChild(closeBtn);
+      container.appendChild(title);
+      container.appendChild(toolbar);
+      container.appendChild(status);
+      container.appendChild(textContent);
+      overlay.appendChild(container);
+      document.body.appendChild(overlay);
+
+      bindSpeechControls();
+    }
+
+    return overlay;
+  }
+
+  function createOrUpdateOverlay(contentHtml) {
+    ensureOverlayShell();
+    const textContainer = document.getElementById("saral-dynamic-text");
+    if (textContainer) {
+      textContainer.innerHTML = contentHtml;
+    }
+    applyThemeToOverlay(currentTheme);
+  }
+
+  function setStatus(message) {
+    const status = document.getElementById("saral-status");
+    if (status) status.textContent = message;
+  }
+
+  function setReaderReady(ready) {
+    contentReady = ready;
+
+    const readBtn = document.getElementById("saral-read-btn");
+    const pauseBtn = document.getElementById("saral-pause-btn");
+    const stopBtn = document.getElementById("saral-stop-btn");
+
+    if (readBtn) readBtn.disabled = !ready;
+    if (pauseBtn) pauseBtn.disabled = !ready;
+    if (stopBtn) stopBtn.disabled = !ready;
+  }
