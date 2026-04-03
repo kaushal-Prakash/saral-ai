@@ -11,7 +11,7 @@ const limiter = rateLimit({
         success: false,
         error: "Too many requests, please try again later."
     },
-    standardHeaders: true, // Return rate limit info in headers
+    standardHeaders: true,
     legacyHeaders: false
 });
 
@@ -20,16 +20,14 @@ app.use(cors());
 app.use(express.json());
 app.use(limiter);
 
-
 const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.post('/api/simplify', async (req, res) => {
+    let text = req.body?.text;
     try {
-        console.log("Received request to simplify:");
-        const { text } = req.body;
+        console.log("Received request to simplify text length:", text?.length);
         if (!text) return res.status(400).json({ error: 'Text is required' });
         
-        // Prompt Engineering for Cognitive Simplicity
         const prompt = `
         You are Saral AI, an accessibility assistant. Rewrite the following text to reduce cognitive load.
         - Use simple, direct language (5th-grade reading level).
@@ -42,20 +40,26 @@ app.post('/api/simplify', async (req, res) => {
         `;
 
         const result = await genAI.models.generateContent({
-            model:"gemini-3-flash-preview",
-            contents:prompt,
+            model: "gemini-3.1-flash-lite-preview", 
+            contents: prompt,
         });
+        
         const simplifiedText = result.text;
-
         res.json({ success: true, simplifiedText });
 
     } catch (error) {
+        console.error("🚨 AI API Error Details:", error); 
+        
         if(error.status == 503){
-            console.log("API is overloaded")
-            //returnging original text as fall back
+            console.log("API is overloaded");
             return res.json({ success: true, simplifiedText: text });
         }
-        res.status(500).json({ error: 'Failed to process text' });
+        
+        // Send the actual error message back to the frontend to make debugging easier
+        res.status(500).json({ 
+            error: 'Failed to process text', 
+            details: error.message || "Unknown API Error" 
+        });
     }
 });
 
