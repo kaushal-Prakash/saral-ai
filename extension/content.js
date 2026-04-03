@@ -141,10 +141,10 @@ function createOrUpdateOverlay(contentHtml) {
     closeBtn.onmouseover = () => (closeBtn.style.color = "#ea4335");
     closeBtn.onmouseout = () => (closeBtn.style.color = "#aaa");
 
+    // Close action: Destroy overlay ONLY on this page. 
+    // I intentionally do NOT update chrome.storage here so it stays active globally.
     closeBtn.addEventListener("click", () => {
-      isFocusModeOn = false;
-      chrome.storage.local.set({ focusModeEnabled: false });
-      deactivateReaderMode();
+      deactivateReaderMode(); 
     });
 
     const textContent = document.createElement("div");
