@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const crypto = require("crypto");
 const { GoogleGenAI } = require("@google/genai");
 const rateLimit = require("express-rate-limit");
 
@@ -20,6 +21,14 @@ const limiter = rateLimit({
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 app.use(limiter);
+
+const cache = new Map();
+const CACHE_LIMIT = 500;
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
+function getCacheKey(text, aggressive) {
+  return crypto.createHash("md5").update(`${Boolean(aggressive)}:${text}`).digest("hex");
+}
 
 const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -101,6 +110,17 @@ app.post("/api/simplify/stream", async (req, res) => {
       return res.end();
     }
 
+    const cacheKey = getCacheKey(text, aggressive);
+    const cachedEntry = cache.get(cacheKey);
+
+    if (cachedEntry && cachedEntry.expiry > Date.now()) {
+      res.write(`data: ${JSON.stringify({ text: cachedEntry.data })}\n\n`);
+      res.write("data: [DONE]\n\n");
+      return res.end();
+    } else if (cachedEntry) {
+      cache.delete(cacheKey);
+    }
+
     const prompt = buildPrompt(text, aggressive);
 
     const responseStream = await genAI.models.generateContentStream({
@@ -108,16 +128,28 @@ app.post("/api/simplify/stream", async (req, res) => {
       contents: prompt,
     });
 
+    let fullResponse = "";
+
     for await (const chunk of responseStream) {
       if (aborted) break;
 
       const piece = chunk?.text;
       if (piece) {
+        fullResponse += piece;
         res.write(`data: ${JSON.stringify({ text: piece })}\n\n`);
       }
     }
 
     if (!aborted) {
+      if (cache.size >= CACHE_LIMIT) {
+        const firstKey = cache.keys().next().value;
+        cache.delete(firstKey);
+      }
+      cache.set(cacheKey, {
+        data: fullResponse,
+        expiry: Date.now() + CACHE_TTL,
+      });
+
       res.write("data: [DONE]\n\n");
     }
     res.end();
