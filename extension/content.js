@@ -53,10 +53,11 @@ function activateReaderMode() {
       return; 
   }
 
+  // UPDATED: Removed hardcoded color #666 from the <p> tag
   createOrUpdateOverlay(`
         <div style="text-align: center; margin-top: 50px;">
             <h2 style="color: #4285f4;">✨ Saral AI is analyzing this page...</h2>
-            <p style="color: #666;">Simplifying text and reducing cognitive load.</p>
+            <p>Simplifying text and reducing cognitive load.</p>
         </div>
   `);
 
@@ -91,8 +92,9 @@ function activateReaderMode() {
         return;
       }
 
+      // UPDATED: Removed hardcoded color #222 from the <h1> tag
       createOrUpdateOverlay(`
-          <h1 style="color: #222; margin-bottom: 30px;">🧠 Saral AI Reader</h1>
+          <h1 style="margin-bottom: 30px;">🧠 Saral AI Reader</h1>
           <div style="line-height: 1.8;">
               ${response.data.simplifiedText.replace(/\n/g, "<br><br>")}
           </div>
@@ -131,7 +133,7 @@ function createOrUpdateOverlay(contentHtml) {
 
     const closeBtn = document.createElement("button");
     closeBtn.innerHTML = "&times;";
-    closeBtn.title = "Close Saral Reader";
+    closeBtn.title = "Dismiss overlay for this page";
     closeBtn.style.cssText = `
         position: absolute; top: 15px; right: 20px;
         background: none; border: none; font-size: 36px; color: #aaa;

@@ -50,7 +50,7 @@ app.post('/api/simplify', async (req, res) => {
         res.json({ success: true, simplifiedText });
 
     } catch (error) {
-        console.log(error);
+        console.log(error.ApiError);
         if(error.ApiError.error.code == 503){
             console.log("API is overloaded")
             //returnging original text as fall back
