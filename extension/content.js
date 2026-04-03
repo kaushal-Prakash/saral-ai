@@ -1,16 +1,20 @@
 let isFocusModeOn = false;
 
-// --- 1. Cognitive Load Score (CLS) Engine ---
+chrome.storage.local.get(['focusModeEnabled'], (result) => {
+    if (result.focusModeEnabled) {
+        isFocusModeOn = true;
+        activateReaderMode();
+    }
+});
+
+// --- 1. Cognitive Load Score (CLS) Engine (Unchanged) ---
 function calculateCLS() {
-    // Metric 1: Visual Density (Total DOM elements relative to screen size)
     const domElementCount = document.getElementsByTagName('*').length;
-    let visualDensityScore = Math.min((domElementCount / 1500) * 40, 40); // Max 40 points
+    let visualDensityScore = Math.min((domElementCount / 1500) * 40, 40); 
 
-    // Metric 2: Distractions (Ads, iframes, sticky elements)
     const distractions = document.querySelectorAll('iframe, aside, .ad, [id*="ad-"], [class*="popup"], [style*="position: fixed"]').length;
-    let distractionScore = Math.min((distractions * 5), 30); // Max 30 points
+    let distractionScore = Math.min((distractions * 5), 30); 
 
-    // Metric 3: Text Complexity (Average sentence length)
     const paragraphs = document.querySelectorAll('p');
     let textScore = 0;
     if (paragraphs.length > 0) {
@@ -22,91 +26,138 @@ function calculateCLS() {
             totalSentences += text.split(/[.!?]+/).length;
         });
         const avgSentenceLength = totalSentences > 0 ? (totalWords / totalSentences) : 0;
-        textScore = Math.min((avgSentenceLength / 20) * 30, 30); // Max 30 points
+        textScore = Math.min((avgSentenceLength / 20) * 30, 30); 
     }
 
-    // Final CLS out of 100
     const finalScore = Math.round(visualDensityScore + distractionScore + textScore);
     return Math.min(finalScore, 100);
 }
 
-// --- 2. Focus Mode (Adaptive UI) ---
+// --- 2. Master Toggle ---
 function toggleFocusMode() {
     isFocusModeOn = !isFocusModeOn;
-    
-    // Elements that typically cause cognitive overload
-    const selectorsToHide = 'aside, iframe, .ad, [id*="ad"], .sidebar, header, footer, [class*="popup"], [class*="banner"]';
-    const elements = document.querySelectorAll(selectorsToHide);
-
-    elements.forEach(el => {
-        el.style.display = isFocusModeOn ? 'none' : '';
+    chrome.storage.local.set({ focusModeEnabled: isFocusModeOn }, () => {
+        if (isFocusModeOn) {
+            activateReaderMode();
+        } else {
+            deactivateReaderMode();
+        }
     });
-
-    if (isFocusModeOn) {
-        document.body.style.maxWidth = '800px';
-        document.body.style.margin = '0 auto';
-        document.body.style.backgroundColor = '#fdfdfd';
-        document.body.style.fontFamily = '"Comic Sans MS", Arial, sans-serif'; // Dyslexia friendly
-        document.body.style.lineHeight = '1.8';
-        document.body.style.fontSize = '18px';
-    } else {
-        // Reset to original
-        document.body.style.maxWidth = '';
-        document.body.style.margin = '';
-        document.body.style.backgroundColor = '';
-        document.body.style.fontFamily = '';
-        document.body.style.lineHeight = '';
-        document.body.style.fontSize = '';
-    }
 }
 
-// --- 3. AI Text Simplification ---
-async function simplifyMainText() {
-    // Grab main content (first 5 paragraphs for the prototype)
-    const paragraphs = Array.from(document.querySelectorAll('p')).slice(0, 5);
-    const combinedText = paragraphs.map(p => p.innerText).join('\n');
+// --- 3. The Reader Mode Overlay Architecture ---
+function activateReaderMode() {
+    // 1. Create the overlay UI immediately
+    createOrUpdateOverlay(`
+        <div style="text-align: center; margin-top: 50px;">
+            <h2 style="color: #4285f4;">✨ Saral AI is analyzing this page...</h2>
+            <p style="color: #666;">Simplifying text and reducing cognitive load.</p>
+        </div>
+    `);
 
-    if (!combinedText || combinedText.trim().length < 20) {
-        alert("Saral AI: Not enough text found to simplify.");
+    // 2. Prevent underlying page from scrolling
+    document.body.style.overflow = 'hidden';
+
+    // 3. Extract text and send to AI
+    const paragraphs = Array.from(document.querySelectorAll('p, article'));
+    const combinedText = paragraphs.map(p => p.innerText).join('\n').trim().substring(0, 3000); // Limit size for API
+
+    if (combinedText.length < 50) {
+        createOrUpdateOverlay(`
+            <h2 style="color: #ea4335;">Not enough text found</h2>
+            <p>Saral AI couldn't find enough article text on this page to simplify.</p>
+        `);
         return;
     }
 
-    try {
-        const response = await fetch('http://localhost:3000/api/simplify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: combinedText })
-        });
+    // 4. Fetch from Backend
+    chrome.runtime.sendMessage(
+        { action: 'fetchSimplify', text: combinedText },
+        (response) => {
+            if (chrome.runtime.lastError || !response || !response.success) {
+                createOrUpdateOverlay(`
+                    <h2 style="color: #ea4335;">❌ Connection Error</h2>
+                    <p>Make sure your local Node.js server is running.</p>
+                    <small>${chrome.runtime.lastError?.message || response?.error}</small>
+                `);
+                return;
+            }
 
-        const data = await response.json();
-        
-        if (data.success) {
-            displaySimplifiedModal(data.simplifiedText);
+            // 5. Update Overlay with actual AI response
+            createOrUpdateOverlay(`
+                <h1 style="color: #222; margin-bottom: 30px;">🧠 Saral AI Reader</h1>
+                <div style="line-height: 1.8;">
+                    ${response.data.simplifiedText.replace(/\n/g, '<br><br>')}
+                </div>
+            `);
         }
-    } catch (error) {
-        console.error("AI Error:", error);
-        alert("Saral AI: Ensure your local Node.js backend is running!");
-    }
+    );
 }
 
-function displaySimplifiedModal(text) {
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
-        width: 80%; max-width: 700px; max-height: 80vh; overflow-y: auto;
-        background: white; padding: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-        z-index: 2147483647; font-family: 'Segoe UI', sans-serif; font-size: 20px;
-        border-radius: 12px; line-height: 1.8; color: #222; border-top: 6px solid #4285f4;
-    `;
+function deactivateReaderMode() {
+    const overlay = document.getElementById('saral-reader-overlay');
+    if (overlay) overlay.remove();
+    document.body.style.overflow = ''; // Restore original website scrolling
+}
+
+// Helper function to build the distraction-free UI with a Close Button
+function createOrUpdateOverlay(contentHtml) {
+    let overlay = document.getElementById('saral-reader-overlay');
     
-    modal.innerHTML = `
-        <h2 style="margin-top:0; color:#4285f4; font-size:24px;">🧠 Saral AI: Simplified View</h2>
-        <p>${text.replace(/\n/g, '<br><br>')}</p>
-        <button id="saralCloseBtn" style="margin-top: 20px; padding: 12px 24px; background: #ea4335; color: white; border: none; cursor: pointer; border-radius: 6px; font-weight:bold; font-size: 16px;">Close Reader</button>
-    `;
-    
-    document.body.appendChild(modal);
-    document.getElementById('saralCloseBtn').addEventListener('click', () => modal.remove());
+    // If the overlay doesn't exist yet, build the skeleton (Container + Close Button)
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'saral-reader-overlay';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #fdfdfd; z-index: 2147483647; overflow-y: auto;
+            font-family: '"Comic Sans MS", Arial, sans-serif'; font-size: 20px;
+        `;
+        
+        // Inner container for spacing
+        const container = document.createElement('div');
+        container.id = 'saral-reader-content';
+        container.style.cssText = `
+            position: relative; /* Important for absolute positioning of the X */
+            max-width: 800px; margin: 60px auto; padding: 40px;
+            background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            color: #333;
+        `;
+
+        // --- THE NEW CLOSE BUTTON ---
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '&times;'; // HTML entity for the 'X' symbol
+        closeBtn.title = "Close Saral Reader and return to original page"; // The Tooltip
+        closeBtn.style.cssText = `
+            position: absolute; top: 15px; right: 20px;
+            background: none; border: none; font-size: 36px; color: #aaa;
+            cursor: pointer; line-height: 1; padding: 0; transition: color 0.2s ease;
+        `;
+        
+        // Hover effects for good UX
+        closeBtn.onmouseover = () => closeBtn.style.color = '#ea4335'; // Turns Google Red on hover
+        closeBtn.onmouseout = () => closeBtn.style.color = '#aaa';
+
+        // Close action: Destroy overlay and sync extension state
+        closeBtn.addEventListener('click', () => {
+            isFocusModeOn = false; // Update local variable
+            chrome.storage.local.set({ focusModeEnabled: false }); // Update storage so popup stays in sync
+            deactivateReaderMode(); // Remove the UI
+        });
+
+        // Div to hold the actual AI text so we don't overwrite the close button
+        const textContent = document.createElement('div');
+        textContent.id = 'saral-dynamic-text';
+
+        // Assemble the DOM
+        container.appendChild(closeBtn);
+        container.appendChild(textContent);
+        overlay.appendChild(container);
+        document.body.appendChild(overlay);
+    }
+
+    // Insert the newly generated HTML into the text container (leaving the Close button untouched)
+    document.getElementById('saral-dynamic-text').innerHTML = contentHtml;
 }
 
 // --- 4. Message Listener ---
@@ -116,8 +167,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === 'toggleFocusMode') {
         toggleFocusMode();
         sendResponse({ status: 'done' });
-    } else if (request.action === 'simplifyText') {
-        simplifyMainText().then(() => sendResponse({ status: 'done' }));
-        return true; // Keep message channel open for async fetch
     }
 });

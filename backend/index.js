@@ -25,6 +25,7 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.post('/api/simplify', async (req, res) => {
     try {
+        console.log("Received request to simplify:");
         const { text } = req.body;
         if (!text) return res.status(400).json({ error: 'Text is required' });
         
