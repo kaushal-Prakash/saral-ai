@@ -4,7 +4,8 @@ const themeStyles = {
       containerBg: "#ffffff",
       color: "#333333",
       bionicColor: "#000000",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Helvetica, Arial, sans-serif",
+      fontStyle: "normal",
       lineHeight: "1.7",
       letterSpacing: "normal",
     },
@@ -13,7 +14,8 @@ const themeStyles = {
       containerBg: "#1e1e1e",
       color: "#e0e0e0",
       bionicColor: "#ffffff",
-      fontFamily: "Verdana, sans-serif",
+      fontFamily: "Courier, monospace",
+      fontStyle: "normal",
       lineHeight: "1.85",
       letterSpacing: "0.04em",
     },
@@ -22,7 +24,8 @@ const themeStyles = {
       containerBg: "#faf8f5",
       color: "#4a4a4a",
       bionicColor: "#222222",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Verdana, sans-serif",
+      fontStyle: "normal",
       lineHeight: "1.7",
       letterSpacing: "normal",
     },
@@ -31,7 +34,8 @@ const themeStyles = {
       containerBg: "#ffffff",
       color: "#222222",
       bionicColor: "#1a73e8", /* High contrast blue for dyslexia to help anchoring */
-      fontFamily: '"Comic Sans MS", "OpenDyslexic", sans-serif',
+      fontFamily: 'Helvetica, Arial, sans-serif',
+      fontStyle: "normal",
       lineHeight: "2.0",
       letterSpacing: "0.12em",
     },
@@ -49,6 +53,7 @@ const themeStyles = {
     container.style.backgroundColor = style.containerBg;
     container.style.color = style.color;
     container.style.fontFamily = style.fontFamily;
+    container.style.fontStyle = style.fontStyle || "normal";
     container.style.lineHeight = style.lineHeight;
     container.style.letterSpacing = style.letterSpacing;
     container.style.setProperty('--bionic-color', style.bionicColor);

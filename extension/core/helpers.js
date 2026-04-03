@@ -288,6 +288,11 @@ function injectBaseStylesOnce() {
       font-weight: bold;
       color: var(--bionic-color, inherit);
     }
+
+    #saral-reader-content * {
+      /* Research explicitly shows italic decreases reading performance */
+      font-style: normal !important;
+    }
   `;
   document.head.appendChild(styleTag);
 }
