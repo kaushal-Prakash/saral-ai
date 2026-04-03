@@ -70,6 +70,28 @@ themeSelect.addEventListener('change', (e) => {
     });
 });
 
+// --- Bionic Handling ---
+const bionicSwitch = document.getElementById('bionicSwitch');
+
+chrome.storage.local.get(['isBionicReadingOn'], (result) => {
+    if (result.isBionicReadingOn) {
+        bionicSwitch.checked = true;
+    }
+});
+
+bionicSwitch.addEventListener('change', (e) => {
+    const isBionic = e.target.checked;
+    
+    chrome.storage.local.set({ isBionicReadingOn: isBionic }, () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { 
+                action: 'toggleBionic', 
+                state: isBionic 
+            });
+        });
+    });
+});
+
 // Initial UI sync
 updateFocusBtnUI();
 

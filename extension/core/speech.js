@@ -75,6 +75,10 @@ function resetHighlights() {
 
     speechState.sentenceSpans = Array.from(root.querySelectorAll(".saral-sentence"));
     speechState.prepared = speechState.sentenceSpans.length > 0;
+
+    if (speechState.prepared) {
+        applyBionicFormatting();
+    }
   }
 
   function updateSpeechButtons() {

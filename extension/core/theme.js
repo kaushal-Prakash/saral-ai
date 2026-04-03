@@ -3,6 +3,7 @@ const themeStyles = {
       background: "#fdfdfd",
       containerBg: "#ffffff",
       color: "#333333",
+      bionicColor: "#000000",
       fontFamily: "Arial, sans-serif",
       lineHeight: "1.7",
       letterSpacing: "normal",
@@ -11,6 +12,7 @@ const themeStyles = {
       background: "#121212",
       containerBg: "#1e1e1e",
       color: "#e0e0e0",
+      bionicColor: "#ffffff",
       fontFamily: "Verdana, sans-serif",
       lineHeight: "1.85",
       letterSpacing: "0.04em",
@@ -19,6 +21,7 @@ const themeStyles = {
       background: "#f4f0ec",
       containerBg: "#faf8f5",
       color: "#4a4a4a",
+      bionicColor: "#222222",
       fontFamily: "Arial, sans-serif",
       lineHeight: "1.7",
       letterSpacing: "normal",
@@ -27,6 +30,7 @@ const themeStyles = {
       background: "#fdf8e3",
       containerBg: "#ffffff",
       color: "#222222",
+      bionicColor: "#1a73e8", /* High contrast blue for dyslexia to help anchoring */
       fontFamily: '"Comic Sans MS", "OpenDyslexic", sans-serif',
       lineHeight: "2.0",
       letterSpacing: "0.12em",
@@ -47,6 +51,7 @@ const themeStyles = {
     container.style.fontFamily = style.fontFamily;
     container.style.lineHeight = style.lineHeight;
     container.style.letterSpacing = style.letterSpacing;
+    container.style.setProperty('--bionic-color', style.bionicColor);
 
     const speedSelect = document.getElementById("saral-speed");
     if (speedSelect) {

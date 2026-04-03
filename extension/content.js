@@ -3,6 +3,7 @@
 // Global State
 // ------------------------------
 var isFocusModeOn = false;
+var isBionicReadingOn = false;
 var currentTheme = "default";
 var currentStreamPort = null;
 var streamBuffer = "";
@@ -34,8 +35,9 @@ if (!isBlacklisted) {
   injectBaseStylesOnce();
 
   // Initial load check
-  chrome.storage.local.get(["focusModeEnabled", "saralTheme"], (result) => {
+  chrome.storage.local.get(["focusModeEnabled", "saralTheme", "isBionicReadingOn"], (result) => {
     if (result.saralTheme) currentTheme = result.saralTheme;
+    if (result.isBionicReadingOn) isBionicReadingOn = result.isBionicReadingOn;
 
     if (result.focusModeEnabled) {
       isFocusModeOn = true;
@@ -72,6 +74,10 @@ if (!isBlacklisted) {
       currentTheme = request.theme || "default";
       applyThemeToOverlay(currentTheme);
       sendResponse({ status: "theme updated" });
+    } else if (request.action === "toggleBionic") {
+      isBionicReadingOn = request.state;
+      applyBionicFormatting();
+      sendResponse({ status: "bionic updated" });
     }
   });
 

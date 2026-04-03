@@ -92,6 +92,31 @@ function getSentenceSegments(text) {
   );
 }
 
+function makeTextBionicSafe(text) {
+  return escapeHTML(text).replace(/\b([a-zA-Z]+)\b/g, (match) => {
+    if (match.length <= 1) return `<b>${match}</b>`;
+    const splitIndex = Math.ceil(match.length / 2);
+    // Don't use <b> if it messes with speech engine, but speech engine reads textContent!
+    return `<b class="saral-bionic">${match.slice(0, splitIndex)}</b>${match.slice(splitIndex)}`;
+  });
+}
+
+function applyBionicFormatting() {
+  if (!speechState || !speechState.sentenceSpans) return;
+  
+  speechState.sentenceSpans.forEach((span, index) => {
+    // Rely on speechState.sentences array to get the original unformatted sentence!
+    const originalText = speechState.sentences[index];
+    if (!originalText) return;
+
+    if (isBionicReadingOn) {
+      span.innerHTML = makeTextBionicSafe(originalText);
+    } else {
+      span.innerHTML = escapeHTML(originalText);
+    }
+  });
+}
+
 function injectBaseStylesOnce() {
   if (document.getElementById("saral-ai-style")) return;
 
@@ -257,6 +282,11 @@ function injectBaseStylesOnce() {
     .saral-sentence.saral-current-sentence {
       background: rgba(26, 115, 232, 0.16);
       box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.18) inset;
+    }
+
+    .saral-bionic {
+      font-weight: bold;
+      color: var(--bionic-color, inherit);
     }
   `;
   document.head.appendChild(styleTag);
