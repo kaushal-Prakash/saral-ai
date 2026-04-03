@@ -3,12 +3,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         fetch('http://localhost:3000/api/simplify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: request.text })
+            body: JSON.stringify({ 
+                text: request.text,
+                aggressive: request.aggressive 
+            })
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();
         })
         .then(data => sendResponse({ success: true, data: data }))
@@ -17,7 +18,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse({ success: false, error: error.message });
         });
         
-        return true; // Indicates asynchronous response
+        return true; 
     }
 });
 

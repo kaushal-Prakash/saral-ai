@@ -24,23 +24,40 @@ const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 app.post('/api/simplify', async (req, res) => {
     let text = req.body?.text;
+    let aggressive = req.body?.aggressive || false; // NEW: Receive the CLS decision
+
     try {
-        console.log("Received request to simplify text length:", text?.length);
+        console.log(`Received request to simplify (Aggressive Mode: ${aggressive})`);
         if (!text) return res.status(400).json({ error: 'Text is required' });
         
+        // --- NEW: Dynamic Prompt Engineering based on CLS ---
+        let promptInstruction = `
+            You are Saral AI, an accessibility assistant. Rewrite the following text to reduce cognitive load.
+            - Use simple, direct language (5th-grade reading level).
+            - Remove metaphors, idioms, and complex jargon.
+            - Break up long, winding sentences into shorter ones.
+        `;
+
+        if (aggressive) {
+            promptInstruction = `
+                You are Saral AI, an accessibility assistant. The user is currently experiencing HIGH cognitive overload from visual clutter or complex text. 
+                - Be EXTREMELY concise.
+                - Use bullet points to summarize key ideas where possible.
+                - Do not use words with more than 3 syllables.
+                - Prioritize absolute clarity over preserving the original writing style.
+            `;
+        }
+
         const prompt = `
-        You are Saral AI, an accessibility assistant. Rewrite the following text to reduce cognitive load.
-        - Use simple, direct language (5th-grade reading level).
-        - Remove metaphors, idioms, and complex jargon.
-        - Break up long, winding sentences into shorter ones.
-        - Output ONLY the simplified text. Do not add conversational filler.
-        
-        Text to simplify:
-        ${text}
+            ${promptInstruction}
+            - Output ONLY the simplified text. Do not add conversational filler.
+            
+            Text to simplify:
+            ${text}
         `;
 
         const result = await genAI.models.generateContent({
-            model: "gemini-3.1-flash-lite-preview", 
+            model: "gemini-3.1-flash-lite-preview",
             contents: prompt,
         });
         
@@ -55,7 +72,6 @@ app.post('/api/simplify', async (req, res) => {
             return res.json({ success: true, simplifiedText: text });
         }
         
-        // Send the actual error message back to the frontend to make debugging easier
         res.status(500).json({ 
             error: 'Failed to process text', 
             details: error.message || "Unknown API Error" 
