@@ -44,6 +44,21 @@ function ensureOverlayShell() {
       const title = document.createElement("h1");
       title.textContent = "🧠 Saral AI Reader";
 
+      const readingLevelBadge = document.createElement("div");
+      readingLevelBadge.id = "saral-reading-level";
+      readingLevelBadge.style.cssText = `
+        display: none;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: rgba(26, 115, 232, 0.1);
+        color: #1a73e8;
+        margin-bottom: 10px;
+        width: fit-content;
+        letter-spacing: 0.01em;
+      `;
+
       const toolbar = document.createElement("div");
       toolbar.className = "saral-toolbar";
 
@@ -118,6 +133,7 @@ function ensureOverlayShell() {
 
       container.appendChild(closeBtn);
       container.appendChild(title);
+      container.appendChild(readingLevelBadge);
       container.appendChild(toolbar);
       container.appendChild(status);
       container.appendChild(textContent);
@@ -239,3 +255,41 @@ function ensureOverlayShell() {
       }
     }, 150);
   }
+
+  /**
+   * Updates the reading-level badge in the reader overlay.
+   * Called by reader-mode.js once FK scores are computed.
+   *
+   * @param {{ before: object|null, after: object|null }} scores
+   */
+  window.saralShowReadingLevel = function ({ before, after }) {
+    const badge = document.getElementById("saral-reading-level");
+    if (!badge) return;
+
+    const R = window.saralReadability;
+    if (!R) return;
+
+    if (before && after) {
+      // Full before → after display
+      badge.textContent =
+        `📖 Reading Level: Grade ${before.grade} (${R.gradeLabel(before.grade)})` +
+        ` → Grade ${after.grade} (${R.gradeLabel(after.grade)})`;
+
+      // Color the badge green if we improved by ≥ 1 grade
+      if (before.grade - after.grade >= 1) {
+        badge.style.background = "rgba(52, 168, 83, 0.12)";
+        badge.style.color = "#188038";
+      } else {
+        badge.style.background = "rgba(26, 115, 232, 0.1)";
+        badge.style.color = "#1a73e8";
+      }
+    } else if (before) {
+      // Only original text scored (AI bypassed or streaming).
+      badge.textContent =
+        `📖 Reading Level: Grade ${before.grade} (${R.gradeLabel(before.grade)})`;
+      badge.style.background = "rgba(26, 115, 232, 0.1)";
+      badge.style.color = "#1a73e8";
+    }
+
+    badge.style.display = "block";
+  };

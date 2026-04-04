@@ -62,6 +62,12 @@ function toggleFocusMode() {
       return;
     }
 
+    // --- Flesch-Kincaid: score the original text ---
+    const fkBefore =
+      typeof window.saralReadability !== "undefined"
+        ? window.saralReadability.fleschKincaid(combinedText)
+        : null;
+
     const totalWords = combinedText.split(/\s+/).filter(Boolean).length;
     const totalSentences = combinedText.split(/[.!?]+/).filter(Boolean).length;
     const avgSentenceLength = totalSentences > 0 ? totalWords / totalSentences : 0;
@@ -84,6 +90,11 @@ function toggleFocusMode() {
       setTimeout(() => {
         createOrUpdateOverlay(formatFinalHTML(combinedText));
         
+        // Show FK score (no after score — text wasn't changed)
+        if (typeof window.saralShowReadingLevel === "function") {
+          window.saralShowReadingLevel({ before: fkBefore, after: null });
+        }
+
         streamBuffer = combinedText;
         if (typeof window.saralSaveSessionState === 'function') {
           window.saralSaveSessionState({ text: streamBuffer });
@@ -101,6 +112,11 @@ function toggleFocusMode() {
     currentStreamPort = chrome.runtime.connect({ name: "saral-stream" });
     streamBuffer = "";
     setReaderReady(false);
+
+    // Show original FK grade while streaming
+    if (typeof window.saralShowReadingLevel === "function") {
+      window.saralShowReadingLevel({ before: fkBefore, after: null });
+    }
 
     createOrUpdateOverlay(`
       <div id="saral-stream-output">
@@ -139,6 +155,14 @@ function toggleFocusMode() {
         currentStreamPort = null;
 
         outputDiv.innerHTML = formatFinalHTML(streamBuffer);
+
+        // Compute FK after simplification and update the badge with before → after
+        if (typeof window.saralReadability !== "undefined" &&
+            typeof window.saralShowReadingLevel === "function") {
+          const fkAfter = window.saralReadability.fleschKincaid(streamBuffer);
+          window.saralShowReadingLevel({ before: fkBefore, after: fkAfter });
+        }
+
         if (typeof window.saralSaveSessionState === 'function') {
           window.saralSaveSessionState({ text: streamBuffer });
         }
