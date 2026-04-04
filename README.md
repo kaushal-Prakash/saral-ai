@@ -26,15 +26,15 @@ Saral AI is a Chrome extension that acts as a real-time cognitive accessibility 
 
 ### Full Feature Walkthrough
 
-![Full Feature Walkthrough](demo/demo.mp4)
+[![Full Feature Walkthrough](demo/demo.png)](https://drive.google.com/file/d/17b9HCbqGrvkWZH6SQYV-jyNaXIUbhTbH/view?usp=drive_link)
 
-> End-to-end demo: CLS scoring → reader activation → AI simplification → adaptive layout.
+> 💡 **Click the image above** to watch the full walkthrough in high resolution (CLS scoring → reader activation → AI simplification → adaptive layout).
 
 ### Theme Profiles Demo
 
-![Theme Profiles Demo](demo/theme-profiles.mp4)
+[![Theme Profiles Demo](demo/theme-profiles.png)](https://drive.google.com/file/d/1Aq45cuGBuENWPp3LIRKCkLI9kjq9YPse/view?usp=drive_link)
 
-> Switching between Default, ADHD, Autism, and Dyslexia profiles live.
+> 💡 **Click the image above** to see real-time switching between four neurodivergent profiles.
 
 ---
 
