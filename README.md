@@ -4,6 +4,34 @@
 
 ---
 
+## 🎨 Demo
+
+### Extension in Action
+
+![Saral AI Reader Overlay](demo/extension.png)
+
+> The reader overlay in action — distraction-free, themed, and streamed token-by-token.
+
+### Extension Popup
+
+![Saral AI Extension Popup](demo/extension-ss.png)
+
+> The popup shows live Cognitive Load Score, theme selector, and all feature toggles.
+
+### Full Feature Walkthrough
+
+![Full feature walkthrough: CLS scoring, reader activation, AI simplification, and adaptive layout](demo/demo.mp4)
+
+> End-to-end demo: CLS scoring → reader activation → AI simplification → adaptive layout.
+
+### Theme Profiles Demo
+
+![Theme profiles demo: switching between Default, ADHD, Autism, and Dyslexia profiles](demo/theme-profiles.mp4)
+
+> Switching between Default, ADHD, Autism, and Dyslexia profiles live.
+
+---
+
 ## 🎯 Problem Statement
 
 Most digital platforms are built for neurotypical users, creating significant sensory and cognitive barriers through:
@@ -82,6 +110,8 @@ Four evidence-based themes tuned for specific cognitive profiles:
 | **Dyslexia** | Helvetica | #fdf8e3 cream | 2.0× line-height, 0.12em letter-spacing, blue bionic anchors |
 
 Themes apply instantly via CSS variables and persist across sessions via `chrome.storage.local`.
+
+> 🎬 See themes switching live → [Theme Profiles Demo](demo/theme-profiles.mp4)
 
 ---
 
