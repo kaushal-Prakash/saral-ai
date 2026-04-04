@@ -139,6 +139,12 @@ After content is fully rendered, all valid anchor tags are scraped from the orig
   - **Truncated URL** (`hostname/path…` in monospace)
 - Deduplicates by `href`, capped at 50 links
 
+**Page Links Toggle** — A popup switch (`showPageLinks`, default: **on**) controls whether the link section is appended:
+- **ON** → links section is injected after content renders (default behaviour)
+- **OFF** → `window.saralRemoveLinks()` is called immediately to remove the section from the live DOM
+- State is persisted via `chrome.storage.local` so the preference survives across sessions
+- `injectLinksSection()` checks the stored flag and early-returns if links are disabled, preventing re-injection when the reader is re-opened in the same session
+
 ---
 
 ## 🏗️ Architecture

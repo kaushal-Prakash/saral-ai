@@ -141,6 +141,24 @@ guidedSwitch.addEventListener('change', (e) => {
     });
 });
 
+// --- Page Links Handling ---
+const pageLinksSwitch = document.getElementById('pageLinksSwitch');
+
+// Load saved preference (default: true)
+chrome.storage.local.get(['showPageLinks'], (result) => {
+    const show = result.showPageLinks !== false; // default true
+    pageLinksSwitch.checked = show;
+});
+
+pageLinksSwitch.addEventListener('change', (e) => {
+    const show = e.target.checked;
+    chrome.storage.local.set({ showPageLinks: show }, () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { action: 'togglePageLinks', state: show });
+        });
+    });
+});
+
 // Initial UI sync
 updateFocusBtnUI();
 

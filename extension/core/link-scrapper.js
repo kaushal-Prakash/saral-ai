@@ -114,6 +114,9 @@ function buildLinkCard(anchor) {
 }
 
 function injectLinksSection() {
+  // Respect the showPageLinks preference (default: true)
+  if (typeof showPageLinks !== 'undefined' && showPageLinks === false) return;
+
   // Only inject inside the reader overlay
   const textRoot = document.getElementById("saral-dynamic-text");
   if (!textRoot) return;
@@ -161,3 +164,9 @@ function injectLinksSection() {
 
 // Expose globally so reader-mode.js can call it after content loads
 window.saralInjectLinks = injectLinksSection;
+
+// Expose remove helper for the popup toggle
+window.saralRemoveLinks = function () {
+  const existing = document.getElementById("saral-links-section");
+  if (existing) existing.remove();
+};

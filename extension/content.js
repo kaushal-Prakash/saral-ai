@@ -6,6 +6,7 @@ var isFocusModeOn = false;
 var isBionicReadingOn = false;
 var isGuidedLearningOn = false;
 var isBoldAllOn = false;
+var showPageLinks = true;
 var currentTheme = "default";
 var currentStreamPort = null;
 var streamBuffer = "";
@@ -37,11 +38,12 @@ if (!isBlacklisted) {
   injectBaseStylesOnce();
 
   // Initial load check
-  chrome.storage.local.get(["focusModeEnabled", "saralTheme", "isBionicReadingOn", "isGuidedLearningOn", "isBoldAllOn"], (result) => {
+  chrome.storage.local.get(["focusModeEnabled", "saralTheme", "isBionicReadingOn", "isGuidedLearningOn", "isBoldAllOn", "showPageLinks"], (result) => {
     if (result.saralTheme) currentTheme = result.saralTheme;
     if (result.isBionicReadingOn) isBionicReadingOn = result.isBionicReadingOn;
     if (result.isGuidedLearningOn) isGuidedLearningOn = result.isGuidedLearningOn;
     if (result.isBoldAllOn) isBoldAllOn = result.isBoldAllOn;
+    showPageLinks = result.showPageLinks !== false; // default true
 
     if (result.focusModeEnabled) {
       isFocusModeOn = true;
@@ -93,6 +95,14 @@ if (!isBlacklisted) {
       if (prevBtn) prevBtn.style.display = isGuidedLearningOn ? "inline-block" : "none";
       if (nextBtn) nextBtn.style.display = isGuidedLearningOn ? "inline-block" : "none";
       sendResponse({ status: "guided updated" });
+    } else if (request.action === "togglePageLinks") {
+      showPageLinks = request.state;
+      if (showPageLinks) {
+        if (typeof window.saralInjectLinks === 'function') window.saralInjectLinks();
+      } else {
+        if (typeof window.saralRemoveLinks === 'function') window.saralRemoveLinks();
+      }
+      sendResponse({ status: "page links updated" });
     }
   });
 
