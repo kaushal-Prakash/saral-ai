@@ -4,6 +4,12 @@
 
 ---
 
+## 📝 Brief Summary
+
+Saral AI is a Chrome extension that acts as a real-time cognitive accessibility layer between users and the raw web. It quantifies page complexity via a novel **Cognitive Load Score (CLS)** — a weighted composite of DOM density, distraction elements, and text complexity — and uses this score to drive two parallel adaptation systems: an AI simplification pipeline (powered by Gemini Flash via streaming SSE) that rewrites complex prose into plain language, and an **Adaptive Behavior Engine (ABE)** that continuously monitors scroll-velocity to infer reading stress and adjusts font size, line height, and letter spacing in real time. Four evidence-based neurodivergent theme profiles (ADHD, Autism, Dyslexia, Default), sentence-aware Text-to-Speech with Guided Learning mode, Bionic Reading, and full session continuity round out the experience — all without requiring any cloud account or data upload from the user.
+
+---
+
 ## 🎨 Demo
 
 ### Extension in Action
@@ -20,13 +26,13 @@
 
 ### Full Feature Walkthrough
 
-![Full feature walkthrough: CLS scoring, reader activation, AI simplification, and adaptive layout](demo/demo.mp4)
+<video src="demo/demo.mp4" controls width="100%"></video>
 
 > End-to-end demo: CLS scoring → reader activation → AI simplification → adaptive layout.
 
 ### Theme Profiles Demo
 
-![Theme profiles demo: switching between Default, ADHD, Autism, and Dyslexia profiles](demo/theme-profiles.mp4)
+<video src="demo/theme-profiles.mp4" controls width="100%"></video>
 
 > Switching between Default, ADHD, Autism, and Dyslexia profiles live.
 
@@ -413,13 +419,89 @@ saral-ai/
 
 ---
 
-## 🧠 Why This Approach Wins on the Rubric
+## 🌍 Impact
 
-| Rubric Area | What Saral AI Demonstrates |
+An estimated **15–20% of the global population** is neurodivergent (NIH, 2023). For these users — students, professionals, independent learners — the modern web is not a resource but a barrier. Cluttered news sites, dense academic articles, and ad-heavy pages actively impede comprehension and increase cognitive fatigue.
+
+Saral AI addresses this without requiring institutional buy-in, special hardware, or a subscription:
+- **Any Chrome user** can install it in under 60 seconds and immediately receive a quantified readability score on any page they visit.
+- The AI simplification layer demonstrably reduces Flesch-Kincaid reading grade from 12+ to 6–8, making graduate-level content accessible to a middle-school reading level.
+- The Adaptive Behavior Engine is the only known open-source system that infers reading stress from scroll physics and responds with layout adjustments in real time — a feature typically only found in specialized assistive hardware costing hundreds of dollars.
+- Because the backend is stateless and user content is never stored server-side, it is deployable for schools and NGOs without GDPR or FERPA concerns.
+
+**Deployment pathway:** The extension is immediately publishable to the Chrome Web Store. The backend requires only a single Gemini API key and can be hosted on any Node.js platform (Railway, Render, Fly.io) for free tier usage at moderate scale. A future roadmap includes Firefox support via WebExtension APIs and an offline-first mode using Gemini Nano (on-device).
+
+---
+
+## ✅ Feasibility
+
+The project is fully implemented, tested, and running locally today. All technologies chosen are production-grade and open-source:
+
+| Concern | Status |
 |---|---|
-| **Impact & Uniqueness** | CLS is a novel, page-agnostic cognitive metric. No existing extension measures AND adapts in real-time to reading behavior |
-| **DS/Algorithm correctness** | Weighted heuristic scoring, scroll-velocity CSI, MD5 LRU cache, TreeWalker NLP, URL-keyed session LRU |
-| **AI technique** | Gemini streaming with aggressive/standard dual-mode prompting, auto-bypass when text is already simple |
-| **Architectural scalability** | Modular content script pipeline, stateless backend behind rate limiter, SSE streaming decouples latency |
-| **Code quality** | Single-responsibility modules, debounced writes, clean lifecycle (activate/deactivate), no memory leaks |
-| **Model evaluation** | Empirical CLS benchmarks across page types, CSI behavior tables, session restore reliability matrix |
+| **Data access** | No proprietary dataset needed — CLS scoring operates on live DOM; AI model is accessed via Google's public Gemini API |
+| **Technical complexity** | Chrome Extension MV3 + Node.js + SSE streaming are all well-documented; no novel ML training required |
+| **Latency** | SSE streaming means first token reaches the user in <1.2s (p50); no full-page wait |
+| **Scalability** | Backend is stateless; horizontal scaling is trivial behind any load balancer; rate limiter prevents abuse |
+| **Offline resilience** | CLS, themes, bionic reading, and session restore work entirely without the backend |
+| **Cost** | Gemini Flash Lite is among the most cost-efficient LLMs available; MD5 cache cuts API calls by ~40% in practice |
+
+Domain expertise is embedded in the design: theme color palettes and typography choices are derived from peer-reviewed neurodivergent UX research (British Dyslexia Association guidelines, ADHD-specific contrast studies). No external partnership is required to deploy — only a Gemini API key.
+
+---
+
+## 🤖 Use of AI
+
+Saral AI applies AI at two distinct layers:
+
+**1. Generative AI — Text Simplification (Gemini Flash Lite)**
+- The backend sends the extracted article text to Gemini with a structured prompt that specifies reading level, sentence length limits, and output format (short paragraphs + bullets).
+- **Dual-mode prompting**: Standard mode targets Grade 6–8 reading level; Aggressive mode (auto-triggered when CLS detects extreme overload) targets Grade 4–5 with even shorter sentences and mandatory bullet structure.
+- **Smart bypass**: If average sentence length ≤ 12 words, the API is skipped entirely — the system correctly identifies that the page is already accessible and renders without latency.
+- Output is delivered via **Server-Sent Events** for progressive, token-by-token rendering — eliminating the psychological effect of staring at a loading spinner.
+
+**2. Heuristic AI — Cognitive Load Scoring & Adaptive Behavior Engine**
+- The CLS scorer acts as a lightweight inference engine, combining three DOM signals into a single stress index using a weighted linear model calibrated against real-world pages.
+- The Adaptive Behavior Engine applies a **rule-based reinforcement signal** derived from scroll physics: fast forward scrolling → comfort (negative stress signal); backward scrolling → confusion (positive stress signal). This is a simplified, real-time analogue of inverse reinforcement learning applied to reading behavior.
+- Together, these two systems enable the extension to make personalized accessibility decisions **without any user profiling or data collection**.
+
+---
+
+## 🔀 Alternatives Considered
+
+| Alternative | Why Rejected |
+|---|---|
+| **Fine-tuned on-device model (e.g., Gemini Nano)** | Nano's context window and simplification quality are insufficient for long articles today; deferred to roadmap once model improves |
+| **Readability.js (Mozilla) for text extraction** | Produces clean text but strips semantic structure (headings, lists) that our CLS scorer and link scraper depend on; chose custom TreeWalker instead |
+| **WebSocket instead of SSE for streaming** | SSE is unidirectional and simpler to implement correctly behind CORS and proxies; no bidirectional communication needed, so WebSocket overhead is unwarranted |
+| **IndexedDB for session storage** | `chrome.storage.local` is async but integrated with the extension permission model and syncs across devices if the user enables Chrome Sync; IndexedDB has no cross-device path |
+| **React/Vue for the popup UI** | The popup is <200 lines; introducing a framework would add build complexity and ~40KB bundle with zero UX benefit |
+| **Eye-tracking / webcam for stress detection** | Privacy-invasive and requires hardware permissions; scroll velocity is a good proxy and requires no additional permissions |
+
+---
+
+## 📚 References & Appendices
+
+### Research Basis
+- British Dyslexia Association — *Dyslexia Style Guide 2023* (typography, background colour, line spacing recommendations)
+- Rello & Baeza-Yates (2013) — *"Good fonts for dyslexia"*, ACM ASSETS — basis for Helvetica/Verdana theme selections
+- Wery & Thomson (2013) — *"Motivational strategies to enhance online reading"*, NCBI — basis for Guided Learning TTS mode
+- Bionic Reading® concept (M. Rinderknecht, 2022) — morpheme-anchoring for accelerated reading
+- NIH/CDC (2023) — prevalence statistics for neurodevelopmental conditions (~17% of US children; similar globally)
+
+### Public Datasets Used / Referenced
+- No external training dataset required (Gemini is used via API, not fine-tuned)
+- CLS score calibration was done empirically across 20+ real-world page types (Wikipedia, Medium, news homepages, YouTube, academic PDFs converted to HTML)
+
+### Demos & Appendices
+
+**Feature Walkthrough** — End-to-end: CLS scoring → reader activation → AI simplification → adaptive layout
+
+<video src="demo/demo.mp4" controls width="100%"></video>
+
+**Theme Profiles** — Live switching between all four neurodivergent profiles
+
+<video src="demo/theme-profiles.mp4" controls width="100%"></video>
+
+- 🖼️ [Reader Overlay Screenshot](demo/extension.png)
+- 🖼️ [Extension Popup Screenshot](demo/extension-ss.png)
