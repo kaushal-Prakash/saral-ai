@@ -290,12 +290,58 @@ Applied per word during TreeWalker traversal of sentence spans. Skips punctuatio
 ## 🚀 Setup & Installation
 
 ### Backend
+
+**Step 1 — Install dependencies**
 ```bash
 cd backend
 npm install
-cp .env.example .env   # Add GEMINI_API_KEY
-npm run dev            # Starts on port 3000 with nodemon
 ```
+
+**Step 2 — Create your `.env` file**
+
+Copy the example file:
+```bash
+cp .env.example .env
+```
+
+Then open `.env` and fill in the two values:
+```env
+PORT=3000
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+| Variable | Description | Example value |
+|---|---|---|
+| `PORT` | Port the Express server listens on. The extension is pre-configured to call `localhost:3000` — change only if that port is already in use | `3000` |
+| `GEMINI_API_KEY` | Your Google Gemini API key for text simplification | `AIza...` |
+
+**How to get a Gemini API key:**
+1. Go to [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+2. Sign in with your Google account
+3. Click **Create API key** → select or create a project
+4. Copy the key and paste it as the value of `GEMINI_API_KEY` in `.env`
+
+> ⚠️ **Never commit your `.env` file.** It is listed in `.gitignore` by default. Only commit `.env.example` with placeholder values.
+
+**Step 3 — Start the server**
+```bash
+npm run dev
+```
+
+You should see:
+```
+Saral AI Backend running on port 3000
+```
+
+**Step 4 — Verify it's running**
+
+Open your browser or run:
+```bash
+curl http://localhost:3000/health
+```
+Expected response: `{"ok":true}`
+
+---
 
 ### Extension
 1. Open `chrome://extensions` in Chrome
