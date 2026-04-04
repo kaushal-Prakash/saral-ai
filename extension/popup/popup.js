@@ -152,11 +152,7 @@ chrome.storage.local.get(['showPageLinks'], (result) => {
 
 pageLinksSwitch.addEventListener('change', (e) => {
     const show = e.target.checked;
-    chrome.storage.local.set({ showPageLinks: show }, () => {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs[0]) chrome.tabs.sendMessage(tabs[0].id, { action: 'togglePageLinks', state: show });
-        });
-    });
+    chrome.storage.local.set({ showPageLinks: show });
 });
 
 // Initial UI sync

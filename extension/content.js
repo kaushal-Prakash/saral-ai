@@ -51,6 +51,19 @@ if (!isBlacklisted) {
     }
   });
 
+  // React to storage changes directly — more reliable than message passing
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    if ('showPageLinks' in changes) {
+      showPageLinks = changes.showPageLinks.newValue !== false;
+      if (showPageLinks) {
+        if (typeof window.saralInjectLinks === 'function') window.saralInjectLinks();
+      } else {
+        if (typeof window.saralRemoveLinks === 'function') window.saralRemoveLinks();
+      }
+    }
+  });
+
   function extractReadableText() {
     const nodes = Array.from(
       document.querySelectorAll("article, main, h1, h2, h3, p, li"),
@@ -95,14 +108,6 @@ if (!isBlacklisted) {
       if (prevBtn) prevBtn.style.display = isGuidedLearningOn ? "inline-block" : "none";
       if (nextBtn) nextBtn.style.display = isGuidedLearningOn ? "inline-block" : "none";
       sendResponse({ status: "guided updated" });
-    } else if (request.action === "togglePageLinks") {
-      showPageLinks = request.state;
-      if (showPageLinks) {
-        if (typeof window.saralInjectLinks === 'function') window.saralInjectLinks();
-      } else {
-        if (typeof window.saralRemoveLinks === 'function') window.saralRemoveLinks();
-      }
-      sendResponse({ status: "page links updated" });
     }
   });
 
