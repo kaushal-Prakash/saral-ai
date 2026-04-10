@@ -1,11 +1,11 @@
 function calculateCLS() {
     const domElementCount = document.getElementsByTagName("*").length;
-    const visualDensityScore = Math.min((domElementCount / 1500) * 40, 40);
+    const visualDensityScore = Math.min((domElementCount / 5000) * 40, 40);
 
     const distractions = document.querySelectorAll(
-      'iframe, aside, .ad, [id*="ad-"], [class*="popup"], [style*="position: fixed"]',
+      'iframe:not([src*="youtube.com"]), aside, .ad, [id*="ad-"], [class*="modal"], [class*="overlay"], [class*="popup"]:not([class*="mwe-popups"]), [style*="position: fixed"]',
     ).length;
-    const distractionScore = Math.min(distractions * 5, 30);
+    const distractionScore = Math.min(distractions * 3, 30);
 
     const paragraphs = document.querySelectorAll("p");
     let textScore = 0;
@@ -21,7 +21,7 @@ function calculateCLS() {
       });
 
       const avgSentenceLength = totalSentences > 0 ? totalWords / totalSentences : 0;
-      textScore = Math.min((avgSentenceLength / 20) * 30, 30);
+      textScore = Math.min((avgSentenceLength / 25) * 30, 30);
     }
 
     const finalScore = Math.round(visualDensityScore + distractionScore + textScore);

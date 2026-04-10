@@ -68,12 +68,12 @@ function buildCalculateCLS(fakeDoc) {
   const document = fakeDoc;
   return function calculateCLS() {
     const domElementCount = document.getElementsByTagName("*").length;
-    const visualDensityScore = Math.min((domElementCount / 1500) * 40, 40);
+    const visualDensityScore = Math.min((domElementCount / 5000) * 40, 40);
 
     const distractions = document.querySelectorAll(
-      'iframe, aside, .ad, [id*="ad-"], [class*="popup"], [style*="position: fixed"]'
+      'iframe:not([src*="youtube.com"]), aside, .ad, [id*="ad-"], [class*="modal"], [class*="overlay"], [class*="popup"]:not([class*="mwe-popups"]), [style*="position: fixed"]'
     ).length;
-    const distractionScore = Math.min(distractions * 5, 30);
+    const distractionScore = Math.min(distractions * 3, 30);
 
     const paragraphs = document.querySelectorAll("p");
     let textScore = 0;
@@ -90,7 +90,7 @@ function buildCalculateCLS(fakeDoc) {
 
       const avgSentenceLength =
         totalSentences > 0 ? totalWords / totalSentences : 0;
-      textScore = Math.min((avgSentenceLength / 20) * 30, 30);
+      textScore = Math.min((avgSentenceLength / 25) * 30, 30);
     }
 
     const finalScore = Math.round(
@@ -178,7 +178,7 @@ test("Empty page → score is 0", () => {
   assert(cls.total === 0, `Expected 0, got ${cls.total}`);
 });
 
-test("Clean article page (500 elements, simple sentences) → low score [10–40]", () => {
+test("Clean article page (500 elements, simple sentences) → low score [5–40]", () => {
   const doc = makeDocument({
     elementCount: 500,
     paragraphs: [
@@ -188,20 +188,20 @@ test("Clean article page (500 elements, simple sentences) → low score [10–40
     ],
   });
   const cls = buildCalculateCLS(doc)();
-  assertRange(cls.total, 10, 40, "Clean page CLS");
+  assertRange(cls.total, 5, 40, "Clean page CLS");
 });
 
-test("Dense page (1500+ elements) → visual density maxes at 40pts", () => {
-  const doc = makeDocument({ elementCount: 1500 });
+test("Dense page (5000+ elements) → visual density maxes at 40pts", () => {
+  const doc = makeDocument({ elementCount: 5000 });
   const cls = buildCalculateCLS(doc)();
   assert(
     cls.total >= 40,
-    `Expected >= 40 for 1500 elements, got ${cls.total}`
+    `Expected >= 40 for 5000 elements, got ${cls.total}`
   );
 });
 
-test("6 distractors → distraction score = 30 (capped)", () => {
-  const fakeDistractors = new Array(6).fill({});
+test("10+ distractors → distraction score = 30 (capped)", () => {
+  const fakeDistractors = new Array(10).fill({});
   const doc = makeDocument({ distractors: fakeDistractors });
   const cls = buildCalculateCLS(doc)();
   assert(
