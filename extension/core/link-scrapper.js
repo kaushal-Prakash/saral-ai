@@ -7,7 +7,8 @@ function truncateLinkUrl(url) {
   try {
     const u = new URL(url);
     const host = u.hostname.replace(/^www\./, "");
-    const path = u.pathname.length > 22 ? u.pathname.slice(0, 22) + "…" : u.pathname;
+    const path =
+      u.pathname.length > 22 ? u.pathname.slice(0, 22) + "…" : u.pathname;
     return host + (u.pathname === "/" ? "" : path);
   } catch {
     return url.length > 45 ? url.slice(0, 45) + "…" : url;
@@ -16,52 +17,60 @@ function truncateLinkUrl(url) {
 
 function getLinkContext(anchor) {
   // Walk up to find the nearest meaningful text container
-  const parent = anchor.closest("p, li, td, blockquote, figcaption") ||
-                 anchor.parentElement;
+  const parent =
+    anchor.closest("p, li, td, blockquote, figcaption") || anchor.parentElement;
   if (!parent) return "";
-  
+
   const text = parent.textContent.trim().replace(/\s+/g, " ");
   const anchorText = anchor.textContent.trim();
   const idx = text.indexOf(anchorText);
-  
+
   if (idx < 0 || text.length <= anchorText.length + 5) return "";
-  
+
   const start = Math.max(0, idx - 25);
   const end = Math.min(text.length, idx + anchorText.length + 50);
   let snippet = text.slice(start, end).trim();
-  
+
   if (start > 0) snippet = "…" + snippet;
   if (end < text.length) snippet = snippet + "…";
-  
+
   // Don't return a snippet that's basically just the link text itself
   if (snippet.replace(anchorText, "").trim().length < 5) return "";
   return snippet;
 }
 
 function scrapePageLinks() {
-  const allAnchors = Array.from(document.querySelectorAll("a[href]")).filter(a => {
-    // Skip our own extension elements
-    if (a.closest("#saral-reader-overlay") || a.closest("#saral-links-panel")) return false;
-    
-    const href = a.href || "";
-    // Skip JS, mailto, tel, fragment-only, and same-page links
-    if (!href ||
+  const allAnchors = Array.from(document.querySelectorAll("a[href]")).filter(
+    (a) => {
+      // Skip our own extension elements
+      if (a.closest("#saral-reader-overlay") || a.closest("#saral-links-panel"))
+        return false;
+
+      const href = a.href || "";
+      // Skip JS, mailto, tel, fragment-only, and same-page links
+      if (
+        !href ||
         href.startsWith("javascript:") ||
         href.startsWith("mailto:") ||
         href.startsWith("tel:") ||
         href === window.location.href ||
-        (href.startsWith("#") || (new URL(href, window.location.href).pathname === window.location.pathname && href.includes("#")))
-    ) return false;
-    
-    const text = a.textContent.trim();
-    if (!text || text.length < 3 || text.length > 120) return false;
-    
-    return true;
-  });
+        href.startsWith("#") ||
+        (new URL(href, window.location.href).pathname ===
+          window.location.pathname &&
+          href.includes("#"))
+      )
+        return false;
+
+      const text = a.textContent.trim();
+      if (!text || text.length < 3 || text.length > 120) return false;
+
+      return true;
+    },
+  );
 
   // Deduplicate by href
   const seen = new Set();
-  return allAnchors.filter(a => {
+  return allAnchors.filter((a) => {
     if (seen.has(a.href)) return false;
     seen.add(a.href);
     return true;
@@ -115,7 +124,7 @@ function buildLinkCard(anchor) {
 
 function injectLinksSection() {
   // Respect the showPageLinks preference (default: true)
-  if (typeof showPageLinks !== 'undefined' && showPageLinks === false) return;
+  if (typeof showPageLinks !== "undefined" && showPageLinks === false) return;
 
   // Only inject inside the reader overlay
   const textRoot = document.getElementById("saral-dynamic-text");
@@ -153,8 +162,8 @@ function injectLinksSection() {
 
   const grid = document.createElement("div");
   grid.style.cssText = "display: flex; flex-direction: column;";
-  
-  links.slice(0, 50).forEach(anchor => {
+
+  links.slice(0, 50).forEach((anchor) => {
     grid.appendChild(buildLinkCard(anchor));
   });
 

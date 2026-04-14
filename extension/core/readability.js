@@ -52,7 +52,9 @@
    * @returns {{ grade: number, words: number, sentences: number, syllables: number } | null}
    */
   function fleschKincaid(text) {
-    const cleaned = String(text || "").replace(/\s+/g, " ").trim();
+    const cleaned = String(text || "")
+      .replace(/\s+/g, " ")
+      .trim();
     if (!cleaned) return null;
 
     const sentences = cleaned
@@ -65,10 +67,7 @@
     const words = cleaned.split(/\s+/).filter((w) => w.length > 0);
     if (words.length < 5) return null;
 
-    const totalSyllables = words.reduce(
-      (sum, w) => sum + countSyllables(w),
-      0
-    );
+    const totalSyllables = words.reduce((sum, w) => sum + countSyllables(w), 0);
 
     const grade =
       0.39 * (words.length / sentences.length) +

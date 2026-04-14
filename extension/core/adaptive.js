@@ -12,7 +12,7 @@ class AdaptiveBehaviorEngine {
       maxLineHeightDelta: 0.6,
       maxLetterSpacing: 0.1,
       minFontSize: 16,
-      maxFontSize: 20
+      maxFontSize: 20,
     };
   }
 
@@ -21,12 +21,12 @@ class AdaptiveBehaviorEngine {
     const currentY = overlay.scrollTop;
     const now = Date.now();
     const timeDelta = now - this.lastScrollTime;
-    
+
     // Evaluate scrolling behavior only every 500ms to prevent distracting rapid changes
     if (timeDelta >= 500) {
       const scrollDelta = currentY - this.lastScrollY;
       const velocity = scrollDelta / timeDelta;
-      
+
       if (velocity > 0.5) {
         // Fast reading / skimming -> decrease stress
         this.updateCSI(-5);
@@ -37,7 +37,7 @@ class AdaptiveBehaviorEngine {
         // Very slow read -> slight struggle -> slight increase
         this.updateCSI(2);
       }
-      
+
       this.lastScrollY = currentY;
       this.lastScrollTime = now;
     }
@@ -52,7 +52,7 @@ class AdaptiveBehaviorEngine {
 
   resetStagnationTimer() {
     if (this.stagnationTimer) clearTimeout(this.stagnationTimer);
-    
+
     // If user stares at same spot for > 30s, increase stress index
     this.stagnationTimer = setTimeout(() => {
       this.updateCSI(10);
@@ -77,23 +77,28 @@ class AdaptiveBehaviorEngine {
 
     // Map CSI (0 to 100) to visual parameters
     const stressRatio = this.csi / 100;
-    
+
     // Line height increases from 1.0 multiplier to 1.35 multiplier of base theme
     const lhIncrease = stressRatio * this.bounds.maxLineHeightDelta;
-    container.style.setProperty("--adaptive-line-height-delta", `${lhIncrease}em`);
+    container.style.setProperty(
+      "--adaptive-line-height-delta",
+      `${lhIncrease}em`,
+    );
 
     // Letter spacing increases slightly
     const lsIncrease = stressRatio * this.bounds.maxLetterSpacing;
     container.style.setProperty("--adaptive-letter-spacing", `${lsIncrease}em`);
 
     // Font size slightly increases
-    const fontSize = this.bounds.minFontSize + (stressRatio * (this.bounds.maxFontSize - this.bounds.minFontSize));
+    const fontSize =
+      this.bounds.minFontSize +
+      stressRatio * (this.bounds.maxFontSize - this.bounds.minFontSize);
     container.style.fontSize = `${fontSize}px`;
   }
 
   promptAggressiveSimplification() {
     this.promptShown = true;
-    
+
     const overlay = document.getElementById("saral-reader-overlay");
     if (!overlay) return;
 
@@ -127,18 +132,22 @@ class AdaptiveBehaviorEngine {
 
     overlay.appendChild(toast);
 
-    document.getElementById("saral-b-aggressive").addEventListener("click", () => {
-      toast.remove();
-      if (typeof window.triggerAggressiveSimplification === 'function') {
-        window.triggerAggressiveSimplification();
-      }
-    });
+    document
+      .getElementById("saral-b-aggressive")
+      .addEventListener("click", () => {
+        toast.remove();
+        if (typeof window.triggerAggressiveSimplification === "function") {
+          window.triggerAggressiveSimplification();
+        }
+      });
 
     document.getElementById("saral-b-dismiss").addEventListener("click", () => {
       toast.remove();
       // reset CSI to delay prompt reappearing immediately
       this.csi = 50;
-      setTimeout(() => { this.promptShown = false; }, 60000); // remind again in 1 min if still struggling
+      setTimeout(() => {
+        this.promptShown = false;
+      }, 60000); // remind again in 1 min if still struggling
     });
   }
 
@@ -150,5 +159,5 @@ class AdaptiveBehaviorEngine {
   }
 }
 
-// Global instance 
+// Global instance
 window.adaptiveEngine = new AdaptiveBehaviorEngine();

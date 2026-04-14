@@ -87,8 +87,9 @@ function getSentenceSegments(text) {
   }
 
   return (
-    value.match(/[^.!?]+[.!?]*\s*/g)?.filter((segment) => segment.trim().length > 0) ||
-    [value]
+    value
+      .match(/[^.!?]+[.!?]*\s*/g)
+      ?.filter((segment) => segment.trim().length > 0) || [value]
   );
 }
 
@@ -103,7 +104,7 @@ function makeTextBionicSafe(text) {
 
 function applyBionicFormatting() {
   if (!speechState || !speechState.sentenceSpans) return;
-  
+
   speechState.sentenceSpans.forEach((span, index) => {
     // Rely on speechState.sentences array to get the original unformatted sentence!
     const originalText = speechState.sentences[index];
@@ -120,8 +121,8 @@ function applyBionicFormatting() {
 function applyBoldFormatting() {
   const container = document.getElementById("saral-reader-content");
   if (!container) return;
-  
-  if (typeof isBoldAllOn !== 'undefined' && isBoldAllOn) {
+
+  if (typeof isBoldAllOn !== "undefined" && isBoldAllOn) {
     container.classList.add("saral-bold-all");
   } else {
     container.classList.remove("saral-bold-all");
