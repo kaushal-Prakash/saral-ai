@@ -1,5 +1,4 @@
-# 🧠 Saral AI — Neuro-Inclusive Web Interface
-
+# 🧠 Saral AI
 > An AI-powered browser extension that introduces **Cognitive Accessibility** as a first-class metric, enabling distraction-free, personalized, and inclusive browsing for individuals with ADHD, Autism, and Dyslexia.
 
 ---
